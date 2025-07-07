@@ -43,9 +43,10 @@ import { DailyAffirmation } from "@/components/daily-affirmation";
 import { EmotionJournal } from "@/components/emotion-journal";
 import { PanicModal } from "@/components/panic-modal";
 import { VoiceCall } from "@/components/voice-call";
+import { FriendChat } from "@/components/friend-chat";
 import { ChibiIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle, Sparkles, BookHeart, Phone } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle, Sparkles, BookHeart, Phone, Users } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -268,6 +269,9 @@ export function ChatInterface() {
                   </DialogContent>
                 </Dialog>
                 <Separator className="my-2 bg-border/50" />
+                 <FriendChat>
+                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Users className="mr-3 h-5 w-5 text-primary"/> Diskusi Teman AI</Button>
+                </FriendChat>
                 <VoiceCall>
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Phone className="mr-3 h-5 w-5 text-primary"/> Mode Telepon</Button>
                 </VoiceCall>
