@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       return (
         <div className="p-2 bg-secondary text-secondary-foreground rounded-lg shadow-lg">
           <p className="font-bold">{`Tanggal: ${label}`}</p>
-          <p className="text-sm">{`Perasaan: ${payload[0].value}`}</p>
+          <p className="text-sm">{`Perasaan: ${payload[0].value.toFixed(0)}`}</p>
         </div>
       );
     }
@@ -189,4 +189,3 @@ export function EmotionJournal() {
     </Card>
   );
 }
-
