@@ -16,161 +16,144 @@ import { generateAudio } from "@/ai/flows/generate-audio";
 import { Phone, Mic, MicOff, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Check for SpeechRecognition API
 const SpeechRecognition =
   (typeof window !== 'undefined' && (window.SpeechRecognition || (window as any).webkitSpeechRecognition));
 
+type ActivityState = 'idle' | 'listening' | 'processing' | 'speaking';
+
+const statusMap: Record<ActivityState, string> = {
+    idle: "Ketuk untuk berbicara",
+    listening: "Mendengarkan...",
+    processing: "Sedang berpikir...",
+    speaking: "AI sedang berbicara..."
+};
+
 export function VoiceCall({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isListening, setIsListening] = React.useState(false);
-  const [isProcessing, setIsProcessing] = React.useState(false);
-  const [isSpeaking, setIsSpeaking] = React.useState(false);
-  const [isReady, setIsReady] = React.useState(false);
+  const [activity, setActivity] = React.useState<ActivityState>('idle');
+  const [isSupported, setIsSupported] = React.useState(true);
   const [transcript, setTranscript] = React.useState("");
   const [aiResponse, setAiResponse] = React.useState("");
-  const [status, setStatus] = React.useState("Ketuk untuk berbicara");
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  // Effect for initializing SpeechRecognition
   React.useEffect(() => {
     if (!isOpen) return;
 
     if (!SpeechRecognition) {
-      setStatus("Maaf, browsermu tidak mendukung fitur suara.");
-      setIsReady(false);
+      setIsSupported(false);
       return;
     }
-
+    
+    setIsSupported(true);
     const recognition = new SpeechRecognition();
     recognition.lang = "id-ID";
     recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-      setIsListening(true);
       setTranscript("");
       setAiResponse("");
-      setStatus("Mendengarkan...");
+      setActivity('listening');
     };
 
     recognition.onresult = async (event) => {
       const currentTranscript = event.results[0][0].transcript;
       setTranscript(currentTranscript);
-      setIsListening(false);
-      setIsProcessing(true);
-      setStatus("Sedang berpikir...");
+      setActivity('processing');
 
       try {
-        const response = await generateVoiceResponse({
-          textInput: currentTranscript,
-        });
+        const response = await generateVoiceResponse({ textInput: currentTranscript });
         setAiResponse(response.responseText);
-        setStatus("Menyiapkan audio...");
 
         const audioResult = await generateAudio(response.responseText);
         if (audioRef.current) {
           audioRef.current.src = audioResult.media;
           audioRef.current.play();
+        } else {
+            setActivity('idle');
         }
       } catch (error) {
         console.error("Gagal memproses respons suara:", error);
-        setStatus("Oops, terjadi kesalahan. Coba lagi.");
-        setIsProcessing(false);
+        setActivity('idle');
       }
     };
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error", event.error);
-      if (event.error === 'no-speech') {
-        setStatus("Saya tidak mendengar apa-apa. Ketuk untuk mencoba lagi.");
-      } else if (event.error === 'not-allowed') {
-        setStatus("Akses mikrofon ditolak. Periksa pengaturan browser.");
-        setIsReady(false);
-      } else {
-        setStatus("Tidak bisa mendengar. Coba lagi.");
-      }
-      setIsListening(false);
-      setIsProcessing(false);
+      setActivity('idle');
     };
 
     recognition.onend = () => {
-      setIsListening(false);
+      setActivity(currentActivity => (currentActivity === 'listening' ? 'idle' : currentActivity));
     };
 
     recognitionRef.current = recognition;
-    setIsReady(true);
+    
+    return () => {
+        if (recognition) {
+            recognition.stop();
+        }
+    };
 
   }, [isOpen]);
 
-  const handleAudioPlay = React.useCallback(() => {
-    setIsSpeaking(true);
-    setStatus("AI sedang berbicara...");
-  }, []);
-
-  const handleAudioEnded = React.useCallback(() => {
-    setIsSpeaking(false);
-    setIsProcessing(false);
-    setStatus("Ketuk untuk berbicara");
-  }, []);
-
-  // Effect for handling audio playback events
   React.useEffect(() => {
     const audioEl = audioRef.current;
+
+    const handlePlay = () => setActivity('speaking');
+    const handleEnded = () => setActivity('idle');
+
     if (audioEl) {
-      audioEl.addEventListener('play', handleAudioPlay);
-      audioEl.addEventListener('ended', handleAudioEnded);
+      audioEl.addEventListener('play', handlePlay);
+      audioEl.addEventListener('ended', handleEnded);
+      audioEl.addEventListener('error', handleEnded);
+
       return () => {
-        if (audioEl) {
-          audioEl.removeEventListener('play', handleAudioPlay);
-          audioEl.removeEventListener('ended', handleAudioEnded);
-        }
-      }
+        audioEl.removeEventListener('play', handlePlay);
+        audioEl.removeEventListener('ended', handleEnded);
+        audioEl.removeEventListener('error', handleEnded);
+      };
     }
-  }, [handleAudioPlay, handleAudioEnded]);
+  }, []);
 
   const handleMicClick = () => {
-    if (!recognitionRef.current || !isReady) return;
+    if (!recognitionRef.current) return;
 
-    if (isListening) {
+    if (activity === 'listening') {
       recognitionRef.current.stop();
-    } else if (!isProcessing && !isSpeaking) {
+    } else if (activity === 'idle') {
       try {
         recognitionRef.current.start();
       } catch (e) {
         console.error("Error starting speech recognition:", e);
-        setIsListening(false);
+        setActivity('idle');
       }
     }
   };
-
+  
   const handleOpenChange = (open: boolean) => {
-    if (!open && (isListening || isProcessing || isSpeaking)) {
-      recognitionRef.current?.stop();
+    if (!open) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       if(audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = "";
       }
+      setActivity('idle');
+      setTranscript("");
+      setAiResponse("");
     }
     setIsOpen(open);
-    // Reset state on close
-    if (!open) {
-        setTranscript("");
-        setAiResponse("");
-        setStatus("Ketuk untuk berbicara");
-        setIsListening(false);
-        setIsProcessing(false);
-        setIsSpeaking(false);
-        setIsReady(false);
-    }
   };
-
+  
+  const isBusy = activity === 'processing' || activity === 'speaking';
+  const status = isSupported ? statusMap[activity] : "Browser tidak mendukung";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-[70vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl flex items-center gap-2">
@@ -181,21 +164,20 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
             Bicaralah, dan AI akan merespons dengan suara.
           </DialogDescription>
         </DialogHeader>
-
         <div className="flex flex-col items-center justify-center flex-1 gap-6 text-center">
             <Button
                 variant="outline"
                 size="icon"
                 className={cn(
                     "rounded-full w-28 h-28 border-4 transition-all duration-300",
-                    isListening ? "border-red-500 bg-red-500/20" : "border-primary bg-primary/20",
-                    (isProcessing || isSpeaking) && "animate-pulse"
+                    activity === 'listening' ? "border-red-500 bg-red-500/20" : "border-primary bg-primary/20",
+                    isBusy && "animate-pulse"
                 )}
                 onClick={handleMicClick}
-                disabled={!isReady || isProcessing || isSpeaking}
+                disabled={!isSupported || isBusy}
             >
-                { isProcessing || isSpeaking ? <LoaderCircle className="w-12 h-12 animate-spin" /> :
-                  isListening ? <MicOff className="w-12 h-12 text-red-500" /> : <Mic className="w-12 h-12 text-primary" />
+                { isBusy ? <LoaderCircle className="w-12 h-12 animate-spin" /> :
+                  activity === 'listening' ? <MicOff className="w-12 h-12 text-red-500" /> : <Mic className="w-12 h-12 text-primary" />
                 }
             </Button>
             <p className="text-lg font-medium text-foreground h-6">{status}</p>
@@ -205,7 +187,6 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
                 {aiResponse && <p><span className="font-bold">AI:</span> {aiResponse}</p>}
             </div>
         </div>
-
         <DialogFooter>
             <Button variant="secondary" onClick={() => handleOpenChange(false)}>Tutup</Button>
         </DialogFooter>
