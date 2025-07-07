@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { generateResponse } from "@/ai/flows/generate-response";
 import { generateAudio } from "@/ai/flows/generate-audio";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export function ChatInterface() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -133,6 +135,13 @@ export function ChatInterface() {
         })
         .catch(err => {
             console.error("Gagal membuat audio:", err);
+            if (err instanceof Error && (err.message.includes("429") || err.message.includes("quota"))) {
+                toast({
+                    title: "Audio Gagal Dibuat",
+                    description: "Layanan suara sedang sibuk. Coba lagi sebentar.",
+                    variant: "destructive",
+                });
+            }
         });
 
     } catch (error) {

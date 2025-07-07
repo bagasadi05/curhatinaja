@@ -35,12 +35,17 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   const [isSupported, setIsSupported] = React.useState(true);
   const [transcript, setTranscript] = React.useState("");
   const [aiResponse, setAiResponse] = React.useState("");
+  const [lastError, setLastError] = React.useState<string | null>(null);
 
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const cleanup = React.useCallback(() => {
     if (recognitionRef.current) {
+      recognitionRef.current.onresult = null;
+      recognitionRef.current.onerror = null;
+      recognitionRef.current.onstart = null;
+      recognitionRef.current.onend = null;
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
@@ -71,6 +76,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
         setActivity("listening");
         setTranscript("");
         setAiResponse("");
+        setLastError(null);
       };
 
       recognition.onresult = async (event) => {
@@ -113,12 +119,24 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
           newAudio.play().catch(onAudioEnd);
         } catch (error) {
           console.error("Gagal memproses respons suara:", error);
+          if (error instanceof Error && (error.message.includes("429") || error.message.includes("quota"))) {
+            setLastError("Layanan suara sedang sibuk. Coba lagi sebentar.");
+          } else {
+            setLastError("Terjadi kesalahan. Silakan coba lagi.");
+          }
           setActivity("idle");
         }
       };
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
+        if (event.error === 'no-speech') {
+            setLastError("Saya tidak mendengar apa-apa. Coba lagi.");
+        } else if (event.error === 'not-allowed') {
+            setLastError("Izin mikrofon ditolak. Periksa pengaturan.");
+        } else {
+            setLastError("Terjadi kesalahan pada mikrofon.");
+        }
         setActivity("idle");
       };
 
@@ -158,12 +176,13 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
       setActivity("idle");
       setTranscript("");
       setAiResponse("");
+      setLastError(null);
     }
     setIsOpen(open);
   };
 
   const isBusy = activity === "processing" || activity === "speaking";
-  const status = isSupported ? statusMap[activity] : "Browser tidak mendukung";
+  const status = lastError ?? (isSupported ? statusMap[activity] : "Browser tidak mendukung");
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -200,7 +219,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
               <Mic className="w-12 h-12 text-primary" />
             )}
           </Button>
-          <p className="text-lg font-medium text-foreground h-6">{status}</p>
+          <p className={cn("text-lg font-medium h-6", lastError ? "text-destructive" : "text-foreground")}>{status}</p>
 
           <div className="w-full text-left space-y-4 px-4 h-40 overflow-y-auto">
             {transcript && (
