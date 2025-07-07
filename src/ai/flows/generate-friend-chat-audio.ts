@@ -70,24 +70,23 @@ const friendChatFlow = ai.defineFlow(
         name: 'friendChatScriptPrompt',
         input: { schema: z.object({ topic: z.string() }) },
         output: { schema: z.object({ script: z.string() }) },
-        prompt: `Anda adalah penulis skenario untuk drama audio pendek.
-Tulis skrip percakapan antara dua teman, Ami dan Budi, yang sedang mendiskusikan masalah yang dihadapi teman mereka (pengguna).
+        prompt: `Lo adalah penulis skenario drama audio. Bikin skrip percakapan singkat antara dua bestie, Ami dan Budi, yang lagi ngebahas masalah temennya (user). Pake bahasa gaul Gen Z (lo-gue, slang, dll).
 
 Persona:
-- Ami: Sangat empatik, suportif, dan fokus pada validasi perasaan. Dia menawarkan kenyamanan dan perspektif yang lembut.
-- Budi: Lebih analitis, praktis, dan fokus pada solusi. Dia menawarkan langkah-langkah konkret dan saran yang membangun.
+- Ami: Si paling empatik, suportif, jago validasi perasaan. Dia ngasih support system yang adem.
+- Budi: Si paling problem-solver, logis, dan to the point. Dia ngasih saran konkret dan no-nonsense.
 
-Topik dari pengguna: "{{{topic}}}"
+Topik dari user: "{{{topic}}}"
 
-Tugas Anda:
-1.  Buatlah percakapan yang seimbang antara Ami dan Budi dalam Bahasa Indonesia.
-2.  Mulailah dengan Ami yang menunjukkan empati, diikuti oleh Budi yang mencoba menganalisis situasi.
-3.  Pastikan percakapan mengalir secara alami dan memberikan perspektif yang berbeda namun saling melengkapi.
-4.  Akhiri percakapan dengan nada yang positif dan memberi harapan.
-5.  Format skrip dengan nama pembicara diikuti oleh titik dua, seperti ini:
-    Ami: [dialog Ami]
-    Budi: [dialog Budi]
-6.  Setiap pembicara harus berbicara setidaknya 2-3 kali. Total panjang skrip sekitar 150-200 kata.
+Tugas Lo:
+1.  Buat percakapan yang seimbang antara Ami dan Budi.
+2.  Mulai dengan Ami yang nunjukin empati, terus Budi coba analisis situasi.
+3.  Pastikan obrolannya ngalir natural dan ngasih dua sudut pandang yang beda tapi saling melengkapi.
+4.  Akhiri dengan nada yang positif dan ngasih harapan.
+5.  Format skripnya: Nama: [dialog]. Contoh:
+    Ami: Gila sih, relate banget.
+    Budi: Oke, coba kita bedah.
+6.  Masing-masing ngomong minimal 2-3 kali. Total skrip sekitar 150-200 kata.
 `,
     });
     

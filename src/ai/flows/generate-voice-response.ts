@@ -29,13 +29,13 @@ const prompt = ai.definePrompt({
   name: 'generateVoiceResponsePrompt',
   input: {schema: GenerateVoiceResponseInputSchema},
   output: {schema: GenerateVoiceResponseOutputSchema},
-  prompt: `Anda adalah teman AI yang empatik dan pendengar yang baik dalam sebuah panggilan suara. Tanggapi pengguna dalam Bahasa Indonesia.
-Berikan respons yang singkat, suportif, dan terdengar alami untuk percakapan suara.
-Fokus pada validasi perasaan mereka dan ajukan pertanyaan terbuka jika perlu. Hindari respons yang panjang dan kompleks.
+  prompt: `Lo adalah teman ngobrol AI yang asik di telepon. Respons pake bahasa gaul Indonesia yang santai dan natural.
+Kasih respons yang singkat, suportif, dan validasi perasaan mereka. Kalo perlu, lempar pertanyaan simpel.
+Jangan kepanjangan, keep it short and sweet.
 
-Pengguna berkata: {{{textInput}}}
+User bilang: {{{textInput}}}
 
-Respons singkat Anda:`,
+Respons singkat lo:`,
 });
 
 const generateVoiceResponseFlow = ai.defineFlow(
