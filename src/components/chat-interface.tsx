@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { generateResponse } from "@/ai/flows/generate-response";
+import { generateAudio } from "@/ai/flows/generate-audio";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,7 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChibiIcon } from "@/components/icons";
-import { Bot, Send, User } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2 } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -29,14 +30,17 @@ const chatFormSchema = z.object({
 });
 
 type ChatMessage = {
-  id: number;
+  id: string;
   role: "user" | "assistant" | "loading";
   content: string;
+  audioUrl?: string;
 };
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [playingId, setPlayingId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -55,14 +59,38 @@ export function ChatInterface() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (audioEl) {
+      const handleEnded = () => setPlayingId(null);
+      audioEl.addEventListener('ended', handleEnded);
+      return () => {
+        audioEl.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, []);
+
+  const handlePlayPause = (id: string, url?: string) => {
+    if (!url || !audioRef.current) return;
+
+    if (playingId === id) {
+      audioRef.current.pause();
+      setPlayingId(null);
+    } else {
+      audioRef.current.src = url;
+      audioRef.current.play();
+      setPlayingId(id);
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof chatFormSchema>) {
     const userMessage: ChatMessage = {
-      id: Date.now(),
+      id: `user-${Date.now()}`,
       role: "user",
       content: values.textInput,
     };
     const loadingMessage: ChatMessage = {
-      id: Date.now() + 1,
+      id: `load-${Date.now()}`,
       role: "loading",
       content: "",
     };
@@ -73,17 +101,28 @@ export function ChatInterface() {
     try {
       const result = await generateResponse(values);
       const assistantMessage: ChatMessage = {
-        id: Date.now() + 2,
+        id: `asst-${Date.now()}`,
         role: "assistant",
         content: result.responseText,
       };
       setMessages((prev) =>
         prev.filter((m) => m.role !== "loading").concat(assistantMessage)
       );
+
+      generateAudio(result.responseText)
+        .then(audioResult => {
+            setMessages(prev => prev.map(m =>
+                m.id === assistantMessage.id ? { ...m, audioUrl: audioResult.media } : m
+            ));
+        })
+        .catch(err => {
+            console.error("Gagal membuat audio:", err);
+        });
+
     } catch (error) {
       console.error("Error generating response:", error);
       const errorMessage: ChatMessage = {
-        id: Date.now() + 2,
+        id: `err-${Date.now()}`,
         role: "assistant",
         content: "Maaf, saya sedang mengalami sedikit masalah saat ini. Silakan coba lagi sebentar lagi.",
       };
@@ -141,7 +180,19 @@ export function ChatInterface() {
                         <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse"></span>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap">{message.content}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="whitespace-pre-wrap flex-1">{message.content}</p>
+                        {message.role === 'assistant' && message.audioUrl && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 shrink-0 text-foreground/60 hover:bg-black/5 hover:text-foreground"
+                                onClick={() => handlePlayPause(message.id, message.audioUrl)}
+                            >
+                                {playingId === message.id ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                            </Button>
+                        )}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -225,6 +276,7 @@ export function ChatInterface() {
           </CardContent>
         </Card>
       </div>
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
 }
