@@ -103,29 +103,31 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
   }, [isOpen]);
 
+  const handleAudioPlay = React.useCallback(() => {
+    setIsSpeaking(true);
+    setStatus("AI sedang berbicara...");
+  }, []);
+
+  const handleAudioEnded = React.useCallback(() => {
+    setIsSpeaking(false);
+    setIsProcessing(false);
+    setStatus("Ketuk untuk berbicara");
+  }, []);
+
   // Effect for handling audio playback events
   React.useEffect(() => {
     const audioEl = audioRef.current;
     if (audioEl) {
-        const handlePlay = () => {
-            setIsSpeaking(true);
-            setStatus("AI sedang berbicara...");
-        };
-        const handleEnded = () => {
-            setIsSpeaking(false);
-            setIsProcessing(false);
-            setStatus("Ketuk untuk berbicara");
-        };
-        audioEl.addEventListener('play', handlePlay);
-        audioEl.addEventListener('ended', handleEnded);
-        return () => {
-          if (audioEl) {
-            audioEl.removeEventListener('play', handlePlay);
-            audioEl.removeEventListener('ended', handleEnded);
-          }
+      audioEl.addEventListener('play', handleAudioPlay);
+      audioEl.addEventListener('ended', handleAudioEnded);
+      return () => {
+        if (audioEl) {
+          audioEl.removeEventListener('play', handleAudioPlay);
+          audioEl.removeEventListener('ended', handleAudioEnded);
         }
+      }
     }
-  }, []);
+  }, [handleAudioPlay, handleAudioEnded]);
 
   const handleMicClick = () => {
     if (!recognitionRef.current || !isReady) return;
