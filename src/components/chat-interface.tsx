@@ -42,6 +42,7 @@ import { EmotionJournal } from "@/components/emotion-journal";
 import { PanicModal } from "@/components/panic-modal";
 import { VoiceCall } from "@/components/voice-call";
 import { ChibiIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle } from "lucide-react";
 
 const chatFormSchema = z.object({
@@ -231,7 +232,7 @@ export function ChatInterface() {
         <h2 className="text-xl font-headline text-foreground">
           CurhatinAja
         </h2>
-        <div className="w-9" />
+        <ThemeToggle />
       </header>
 
       <div className="flex-1 flex flex-col overflow-hidden">
