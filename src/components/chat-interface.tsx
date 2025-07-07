@@ -22,13 +22,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +44,7 @@ import { PanicModal } from "@/components/panic-modal";
 import { VoiceCall } from "@/components/voice-call";
 import { ChibiIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle, Sparkles, BookHeart, Phone } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -168,70 +169,73 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center justify-between p-4 border-b bg-secondary/50 backdrop-blur-sm z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+    <div className="flex flex-col h-full bg-transparent">
+      <header className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm z-10">
+        <Sheet>
+          <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
               <span className="sr-only">Buka Menu</span>
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <Dialog>
-              <DialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Afirmasi Harian
-                </DropdownMenuItem>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
-                <DialogHeader>
-                  <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Menampilkan afirmasi harian untuk motivasi dan mengatur notifikasi.
-                  </DialogDescription>
-                </DialogHeader>
-                <DailyAffirmation />
-              </DialogContent>
-            </Dialog>
-            <Dialog>
-              <DialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Jurnal Emosi
-                </DropdownMenuItem>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
-                <DialogHeader>
-                  <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Catat dan lihat tren emosi harianmu.
-                  </DialogDescription>
-                </DialogHeader>
-                <EmotionJournal />
-              </DialogContent>
-            </Dialog>
-            <DropdownMenuSeparator />
-            <VoiceCall>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                Mode Telepon
-              </DropdownMenuItem>
-            </VoiceCall>
-            <DropdownMenuSeparator />
-            <PanicModal>
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-              >
-                <AlertCircle className="mr-2 h-4 w-4" />
-                Dukungan Cepat
-              </DropdownMenuItem>
-            </PanicModal>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-4 w-[300px] sm:w-[320px] bg-secondary border-r-border/50">
+            <SheetHeader>
+              <SheetTitle className="font-sans font-semibold text-2xl text-left">Menu</SheetTitle>
+            </SheetHeader>
+            <div className="mt-8 flex flex-col gap-1">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Sparkles className="mr-3 h-5 w-5 text-primary"/> Afirmasi Harian</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
+                    <DialogHeader>
+                      <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
+                      <DialogDescription className="sr-only">
+                        Menampilkan afirmasi harian untuk motivasi dan mengatur notifikasi.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DailyAffirmation />
+                  </DialogContent>
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><BookHeart className="mr-3 h-5 w-5 text-primary"/> Jurnal Emosi</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+                    <DialogHeader>
+                      <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
+                      <DialogDescription className="sr-only">
+                        Catat dan lihat tren emosi harianmu.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <EmotionJournal />
+                  </DialogContent>
+                </Dialog>
+                <Separator className="my-2 bg-border/50" />
+                <VoiceCall>
+                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Phone className="mr-3 h-5 w-5 text-primary"/> Mode Telepon</Button>
+                </VoiceCall>
+                <Separator className="my-2 bg-border/50" />
+                <PanicModal>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-base p-3 h-auto text-destructive hover:bg-destructive/10 hover:text-destructive focus:text-destructive"
+                  >
+                    <AlertCircle className="mr-3 h-5 w-5" />
+                    Dukungan Cepat
+                  </Button>
+                </PanicModal>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        <div className="text-center">
+          <h2 className="text-xl font-sans font-semibold text-foreground">
+            CurhatinAja
+          </h2>
+          <p className="text-sm font-sans text-muted-foreground -mt-1">Aku di sini untuk mendengarkan...</p>
+        </div>
 
-        <h2 className="text-xl font-headline text-foreground">
-          CurhatinAja
-        </h2>
         <ThemeToggle />
       </header>
 
@@ -304,7 +308,7 @@ export function ChatInterface() {
           </div>
         </ScrollArea>
       </div>
-      <div className="p-4 border-t bg-background">
+      <div className="p-4 border-t bg-background/80 backdrop-blur-sm">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
