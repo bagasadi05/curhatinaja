@@ -38,18 +38,17 @@ const prompt = ai.definePrompt({
   name: 'customizeAIResponseStylePrompt',
   input: {schema: CustomizeAIResponseStyleInputSchema},
   output: {schema: CustomizeAIResponseStyleOutputSchema},
-  prompt: `Anda adalah asisten AI yang dirancang untuk memberikan respons dalam Bahasa Indonesia berdasarkan gaya respons yang dipilih pengguna.
+  prompt: `Anda adalah asisten AI yang dirancang untuk memberikan respons dalam Bahasa Indonesia berdasarkan gaya respons yang dipilih pengguna. Tujuan Anda adalah memulai percakapan yang lembut dan empatik berdasarkan perasaan yang dilaporkan pengguna.
 
   Pengguna merasa: {{{feeling}}}
 
   Pengguna telah meminta gaya respons berikut: {{{responseStyle}}}
 
-  Berdasarkan informasi di atas, berikan respons yang disesuaikan dengan perasaan dan gaya respons pengguna.
+  Berdasarkan informasi di atas, berikan respons singkat yang membuka percakapan dan disesuaikan dengan perasaan serta gaya respons pengguna.
 
   Jika gaya responsnya Suportif, berikan empati dan dorongan.
-  Jika gaya responsnya Netral Objektif, berikan perspektif yang seimbang dan tidak bias.
-  Jika gaya responsnya Psikologis, gunakan teknik pembingkaian ulang kognitif untuk membantu pengguna.
-  `,
+  Jika gaya responsnya Netral Objektif, ajukan pertanyaan yang seimbang dan tidak bias.
+  Jika gaya responsnya Psikologis, tawarkan perspektif yang membantu atau ajukan pertanyaan reflektif.`,
 });
 
 const customizeAIResponseStyleFlow = ai.defineFlow(

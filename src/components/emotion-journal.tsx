@@ -36,7 +36,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export function EmotionJournal() {
+type EmotionJournalProps = {
+  onLog?: (feeling: number) => void;
+};
+
+export function EmotionJournal({ onLog }: EmotionJournalProps) {
   const [feeling, setFeeling] = useState(50);
   const [logs, setLogs] = useState<EmotionLog[]>([]);
   const [streak, setStreak] = useState(0);
@@ -94,7 +98,7 @@ export function EmotionJournal() {
     }
     // If they already logged today, streak doesn't change.
 
-    const updatedLogs = [...logs, newLog];
+    const updatedLogs = [...logs.filter(log => format(new Date(log.date), 'yyyy-MM-dd') !== format(today, 'yyyy-MM-dd')), newLog];
     setLogs(updatedLogs);
     setStreak(currentStreak);
 
@@ -109,7 +113,8 @@ export function EmotionJournal() {
           title: "Emosi Dicatat!",
           description: `Rentetanmu sekarang ${currentStreak} hari. Teruslah berefleksi!`,
         });
-    } catch (error) {
+        onLog?.(feeling);
+      } catch (error) {
         console.error("Gagal menyimpan log emosi:", error);
         toast({
             title: "Gagal Menyimpan",

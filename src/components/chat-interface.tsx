@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { generateResponse } from "@/ai/flows/generate-response";
 import { generateAudio } from "@/ai/flows/generate-audio";
+import { customizeAIResponseStyle } from "@/ai/flows/customize-response-style";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -61,6 +62,7 @@ type ChatMessage = {
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [isJournalOpen, setIsJournalOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -168,6 +170,64 @@ export function ChatInterface() {
     }
   }
 
+  async function handleEmotionLogged(feelingValue: number) {
+    setIsJournalOpen(false); // Close the dialog
+
+    const feelingMap: { [key: string]: string } = {
+        low: "sedih atau kurang bersemangat",
+        medium: "merasa biasa saja",
+        high: "merasa baik atau bersemangat",
+    };
+
+    let feelingDescription: string;
+    if (feelingValue < 33) feelingDescription = feelingMap.low;
+    else if (feelingValue < 66) feelingDescription = feelingMap.medium;
+    else feelingDescription = feelingMap.high;
+
+    const proactiveIntro = `Aku melihat kamu baru saja mencatat bahwa kamu ${feelingDescription}.`;
+
+    const loadingMessage: ChatMessage = {
+        id: `load-${Date.now()}`,
+        role: "loading",
+        content: "",
+    };
+    setMessages((prev) => [...prev, {id: `intro-${Date.now()}`, role: 'assistant', content: proactiveIntro}, loadingMessage]);
+
+    try {
+        const result = await customizeAIResponseStyle({
+            feeling: feelingDescription,
+            responseStyle: form.getValues("responseStyle"),
+        });
+        
+        const assistantMessage: ChatMessage = {
+            id: `asst-${Date.now()}`,
+            role: "assistant",
+            content: result.response,
+        };
+
+        // Replace loading message with the actual response, but keep the intro.
+        setMessages((prev) => prev.filter((m) => m.role !== "loading").concat(assistantMessage));
+
+        generateAudio(proactiveIntro + " " + result.response)
+            .then(audioResult => {
+                setMessages(prev => {
+                    // This is complex. For now, let's just add audio to the last message.
+                    // A better implementation would combine the two messages into one.
+                    return prev.map(m => m.id === assistantMessage.id ? { ...m, audioUrl: audioResult.media } : m)
+                });
+            });
+
+    } catch (error) {
+        console.error("Error generating proactive response:", error);
+        setMessages((prev) => prev.filter((m) => m.role !== "loading" && m.id !== `intro-${Date.now()}`));
+        toast({
+            title: "Gagal Merespons",
+            description: "Maaf, saya tidak dapat merespons catatan jurnal Anda saat ini.",
+            variant: "destructive"
+        });
+    }
+  }
+
   return (
     <div className="flex flex-col h-full bg-transparent">
       <header className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm z-10">
@@ -197,7 +257,7 @@ export function ChatInterface() {
                     <DailyAffirmation />
                   </DialogContent>
                 </Dialog>
-                <Dialog>
+                <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
                   <DialogTrigger asChild>
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><BookHeart className="mr-3 h-5 w-5 text-primary"/> Jurnal Emosi</Button>
                   </DialogTrigger>
@@ -208,7 +268,7 @@ export function ChatInterface() {
                         Catat dan lihat tren emosi harianmu.
                       </DialogDescription>
                     </DialogHeader>
-                    <EmotionJournal />
+                    <EmotionJournal onLog={handleEmotionLogged} />
                   </DialogContent>
                 </Dialog>
                 <Separator className="my-2 bg-border/50" />
