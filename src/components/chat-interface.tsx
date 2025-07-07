@@ -107,7 +107,15 @@ export function ChatInterface() {
         currentAudio.pause();
       }
       const newAudio = new Audio(url);
-      newAudio.play();
+      newAudio.play().catch(err => {
+        console.error("Gagal memutar audio:", err);
+        toast({
+            title: "Gagal Memutar Audio",
+            description: "Tidak dapat memutar file audio saat ini.",
+            variant: "destructive",
+        });
+        setPlayingId(null);
+      });
       newAudio.onended = () => setPlayingId(null);
       audioRef.current = newAudio;
       setPlayingId(id);
@@ -205,21 +213,21 @@ export function ChatInterface() {
             content: result.response,
         };
 
-        // Replace loading message with the actual response, but keep the intro.
         setMessages((prev) => prev.filter((m) => m.role !== "loading").concat(assistantMessage));
 
         generateAudio(proactiveIntro + " " + result.response)
             .then(audioResult => {
                 setMessages(prev => {
-                    // This is complex. For now, let's just add audio to the last message.
-                    // A better implementation would combine the two messages into one.
                     return prev.map(m => m.id === assistantMessage.id ? { ...m, audioUrl: audioResult.media } : m)
                 });
+            })
+            .catch(err => {
+                console.error("Gagal membuat audio untuk respons proaktif:", err);
             });
 
     } catch (error) {
         console.error("Error generating proactive response:", error);
-        setMessages((prev) => prev.filter((m) => m.role !== "loading" && m.id !== `intro-${Date.now()}`));
+        setMessages((prev) => prev.filter((m) => m.role !== "loading" && !m.id.startsWith('intro-')));
         toast({
             title: "Gagal Merespons",
             description: "Maaf, saya tidak dapat merespons catatan jurnal Anda saat ini.",
@@ -248,12 +256,6 @@ export function ChatInterface() {
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Sparkles className="mr-3 h-5 w-5 text-primary"/> Afirmasi Harian</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
-                    <DialogHeader>
-                      <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
-                      <DialogDescription className="sr-only">
-                        Menampilkan afirmasi harian untuk motivasi dan mengatur notifikasi.
-                      </DialogDescription>
-                    </DialogHeader>
                     <DailyAffirmation />
                   </DialogContent>
                 </Dialog>
@@ -262,12 +264,6 @@ export function ChatInterface() {
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><BookHeart className="mr-3 h-5 w-5 text-primary"/> Jurnal Emosi</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
-                    <DialogHeader>
-                      <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
-                      <DialogDescription className="sr-only">
-                        Catat dan lihat tren emosi harianmu.
-                      </DialogDescription>
-                    </DialogHeader>
                     <EmotionJournal onLog={handleEmotionLogged} />
                   </DialogContent>
                 </Dialog>
@@ -290,10 +286,10 @@ export function ChatInterface() {
         </Sheet>
         
         <div className="text-center">
-          <h2 className="text-xl font-sans font-semibold text-foreground">
+          <h2 className="text-xl font-poppins font-semibold text-foreground">
             CurhatinAja
           </h2>
-          <p className="text-sm font-sans text-muted-foreground -mt-1">Aku di sini untuk mendengarkan...</p>
+          <p className="text-sm font-poppins text-muted-foreground -mt-1">Aku di sini untuk mendengarkan...</p>
         </div>
 
         <ThemeToggle />
@@ -326,7 +322,7 @@ export function ChatInterface() {
                 )}
                 <Card
                   className={cn(
-                    "max-w-md rounded-xl shadow-lg",
+                    "max-w-md rounded-xl shadow-md",
                     message.role === "user"
                       ? "bg-accent text-accent-foreground rounded-br-sm"
                       : "bg-secondary text-secondary-foreground rounded-bl-sm"
@@ -372,7 +368,7 @@ export function ChatInterface() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex items-end gap-2"
+            className="flex items-end gap-3"
           >
             <FormField
               control={form.control}
@@ -382,7 +378,7 @@ export function ChatInterface() {
                   <FormControl>
                     <Textarea
                       placeholder="Ketik pesanmu di sini..."
-                      className="min-h-[40px] resize-none focus-visible:ring-2 p-3 bg-secondary rounded-lg shadow-sm"
+                      className="min-h-[44px] resize-none focus-visible:ring-2 p-3 bg-secondary rounded-xl shadow-inner"
                       {...field}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
@@ -396,7 +392,16 @@ export function ChatInterface() {
               )}
             />
             <div className="flex flex-col gap-2">
-              <FormField
+               <Button
+                type="submit"
+                size="icon"
+                className="h-11 w-11 bg-primary hover:bg-primary/90 rounded-full"
+                disabled={form.formState.isSubmitting}
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
+             <FormField
                 control={form.control}
                 name="responseStyle"
                 render={({ field }) => (
@@ -406,28 +411,19 @@ export function ChatInterface() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="w-[150px] bg-secondary shadow-sm">
-                          <SelectValue placeholder="Gaya Respon" />
+                        <SelectTrigger className="w-auto sm:w-[150px] bg-secondary shadow-sm rounded-full h-11">
+                          <SelectValue placeholder="Gaya" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Supportive">Suportif</SelectItem>
-                        <SelectItem value="Neutral Objective">Netral Objektif</SelectItem>
+                        <SelectItem value="Neutral Objective">Netral</SelectItem>
                         <SelectItem value="Psychological">Psikologis</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                size="default"
-                className="h-10 bg-primary hover:bg-primary/90"
-                disabled={form.formState.isSubmitting}
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
           </form>
         </Form>
       </div>
