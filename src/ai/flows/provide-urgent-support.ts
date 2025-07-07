@@ -1,23 +1,23 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow to provide quick and comforting responses in panic mode.
+ * @fileOverview File ini mendefinisikan alur Genkit untuk memberikan respons cepat dan menenangkan dalam mode panik.
  *
- * - provideUrgentSupport - A function that takes user input and returns a comforting response.
- * - UrgentSupportInput - The input type for the provideUrgentSupport function.
- * - UrgentSupportOutput - The return type for the provideUrgentSupport function.
+ * - provideUrgentSupport - Sebuah fungsi yang menerima input pengguna dan mengembalikan respons yang menenangkan.
+ * - UrgentSupportInput - Tipe input untuk fungsi provideUrgentSupport.
+ * - UrgentSupportOutput - Tipe kembalian untuk fungsi provideUrgentSupport.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const UrgentSupportInputSchema = z.object({
-  userInput: z.string().describe('The user input describing their panic situation.'),
+  userInput: z.string().describe('Input pengguna yang menjelaskan situasi paniknya.'),
 });
 export type UrgentSupportInput = z.infer<typeof UrgentSupportInputSchema>;
 
 const UrgentSupportOutputSchema = z.object({
-  comfortingResponse: z.string().describe('A comforting and supportive response to help the user calm down.'),
+  comfortingResponse: z.string().describe('Respons yang menenangkan dan suportif untuk membantu pengguna tenang.'),
 });
 export type UrgentSupportOutput = z.infer<typeof UrgentSupportOutputSchema>;
 
@@ -29,11 +29,11 @@ const prompt = ai.definePrompt({
   name: 'urgentSupportPrompt',
   input: {schema: UrgentSupportInputSchema},
   output: {schema: UrgentSupportOutputSchema},
-  prompt: `You are an AI assistant designed to provide quick and comforting responses to users experiencing panic or distress.  Your goal is to help them calm down and feel supported.
+  prompt: `Anda adalah asisten AI yang dirancang untuk memberikan respons cepat dan menenangkan dalam Bahasa Indonesia kepada pengguna yang mengalami kepanikan atau tekanan. Tujuan Anda adalah membantu mereka tenang dan merasa didukung.
 
-  User Input: {{{userInput}}}
+  Input Pengguna: {{{userInput}}}
 
-  Respond with a short, empathetic, and reassuring message. Focus on providing immediate comfort and suggesting simple coping mechanisms like deep breathing or focusing on the present moment.`,
+  Balas dengan pesan singkat, empatik, dan meyakinkan. Fokus pada memberikan kenyamanan segera dan menyarankan mekanisme koping sederhana seperti pernapasan dalam atau fokus pada saat ini.`,
 });
 
 const provideUrgentSupportFlow = ai.defineFlow(

@@ -16,7 +16,7 @@ export default function Home() {
               CurhatinAja
             </h1>
             <p className="text-sm text-stone-600">
-              Your safe space to share your feelings and thoughts without judgment.
+             Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
             </p>
           </header>
 

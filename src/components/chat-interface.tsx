@@ -24,7 +24,7 @@ import { ChibiIcon } from "@/components/icons";
 import { Bot, Send, User } from "lucide-react";
 
 const chatFormSchema = z.object({
-  textInput: z.string().min(1, "Message cannot be empty."),
+  textInput: z.string().min(1, "Pesan tidak boleh kosong."),
   responseStyle: z.enum(["Supportive", "Neutral Objective", "Psychological"]),
 });
 
@@ -85,7 +85,7 @@ export function ChatInterface() {
       const errorMessage: ChatMessage = {
         id: Date.now() + 2,
         role: "assistant",
-        content: "I'm sorry, I'm having a bit of trouble right now. Please try again in a moment.",
+        content: "Maaf, saya sedang mengalami sedikit masalah saat ini. Silakan coba lagi sebentar lagi.",
       };
       setMessages((prev) =>
         prev.filter((m) => m.role !== "loading").concat(errorMessage)
@@ -97,16 +97,16 @@ export function ChatInterface() {
     <div className="flex flex-col h-full p-4 md:p-6 bg-primary/20">
       <div className="flex-1 flex flex-col gap-4">
         <header className="text-center">
-            <h2 className="text-2xl md:text-3xl font-headline text-stone-800">How are you feeling today?</h2>
-            <p className="text-muted-foreground">Share your thoughts and let's talk it through.</p>
+            <h2 className="text-2xl md:text-3xl font-headline text-stone-800">Bagaimana perasaanmu hari ini?</h2>
+            <p className="text-muted-foreground">Bagikan pemikiranmu dan mari kita bicarakan.</p>
         </header>
         <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
           <div className="px-4 space-y-6 py-4">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
                     <ChibiIcon className="w-32 h-32 text-accent/80" />
-                    <p className="font-headline text-xl mt-4">I'm here to listen.</p>
-                    <p>Type your first message below to begin.</p>
+                    <p className="font-headline text-xl mt-4">Aku di sini untuk mendengarkan.</p>
+                    <p>Ketik pesan pertamamu di bawah untuk memulai.</p>
                 </div>
             )}
             {messages.map((message) => (
@@ -150,7 +150,7 @@ export function ChatInterface() {
                      <div className="bg-accent/50 w-full h-full flex items-center justify-center">
                         <User className="h-5 w-5 text-accent-foreground" />
                     </div>
-                    <AvatarFallback>You</AvatarFallback>
+                    <AvatarFallback>Anda</AvatarFallback>
                   </Avatar>
                 )}
               </div>
@@ -173,7 +173,7 @@ export function ChatInterface() {
                     <FormItem className="flex-1">
                       <FormControl>
                         <Textarea
-                          placeholder="Type your message here..."
+                          placeholder="Ketik pesanmu di sini..."
                           className="h-24 resize-none border-0 focus-visible:ring-0 shadow-none p-3"
                           {...field}
                           onKeyDown={(e) => {
@@ -199,13 +199,13 @@ export function ChatInterface() {
                         >
                           <FormControl>
                             <SelectTrigger className="w-[150px]">
-                              <SelectValue placeholder="Response Style" />
+                              <SelectValue placeholder="Gaya Respon" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Supportive">Supportive</SelectItem>
-                            <SelectItem value="Neutral Objective">Neutral Objective</SelectItem>
-                            <SelectItem value="Psychological">Psychological</SelectItem>
+                            <SelectItem value="Supportive">Suportif</SelectItem>
+                            <SelectItem value="Neutral Objective">Netral Objektif</SelectItem>
+                            <SelectItem value="Psychological">Psikologis</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormItem>

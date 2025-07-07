@@ -5,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Quote } from "lucide-react";
 
 const affirmations = [
-    "You are capable of amazing things.",
-    "Your feelings are valid. Take your time.",
-    "Every day is a new beginning. Take a deep breath and start again.",
-    "You are stronger than you think.",
-    "It's okay to not be okay. Kindness to yourself is key.",
-    "You are enough, just as you are.",
-    "Your potential is limitless.",
-    "Believe in yourself and all that you are.",
+    "Kamu mampu melakukan hal-hal luar biasa.",
+    "Perasaanmu valid. Ambil waktumu.",
+    "Setiap hari adalah awal yang baru. Tarik napas dalam-dalam dan mulai lagi.",
+    "Kamu lebih kuat dari yang kamu kira.",
+    "Tidak apa-apa untuk tidak baik-baik saja. Kebaikan pada diri sendiri adalah kuncinya.",
+    "Kamu sudah cukup, apa adanya.",
+    "Potensimu tidak terbatas.",
+    "Percayalah pada dirimu sendiri dan semua yang ada padamu.",
 ];
 
 export function DailyAffirmation() {
@@ -26,12 +26,12 @@ export function DailyAffirmation() {
     return (
         <Card className="bg-accent/50 border-accent/50 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-headline text-stone-700">Daily Affirmation</CardTitle>
+                <CardTitle className="text-lg font-headline text-stone-700">Afirmasi Harian</CardTitle>
                 <Quote className="h-5 w-5 text-accent-foreground" />
             </CardHeader>
             <CardContent>
                 <p className="text-sm text-muted-foreground font-body italic">
-                    {affirmation || "Loading your daily dose of positivity..."}
+                    {affirmation || "Memuat dosis positivitas harianmu..."}
                 </p>
             </CardContent>
         </Card>

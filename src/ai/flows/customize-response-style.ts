@@ -1,28 +1,28 @@
 'use server';
 
 /**
- * @fileOverview An AI agent that customizes its response style based on user preference.
+ * @fileOverview Agen AI yang menyesuaikan gaya responsnya berdasarkan preferensi pengguna.
  *
- * - customizeAIResponseStyle - A function that handles the AI response customization process.
- * - CustomizeAIResponseStyleInput - The input type for the customizeAIResponseStyle function.
- * - CustomizeAIResponseStyleOutput - The return type for the customizeAIResponseStyle function.
+ * - customizeAIResponseStyle - Fungsi yang menangani proses kustomisasi respons AI.
+ * - CustomizeAIResponseStyleInput - Tipe input untuk fungsi customizeAIResponseStyle.
+ * - CustomizeAIResponseStyleOutput - Tipe kembalian untuk fungsi customizeAIResponseStyle.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const CustomizeAIResponseStyleInputSchema = z.object({
-  feeling: z.string().describe('The user feeling that needs to be processed.'),
+  feeling: z.string().describe('Perasaan pengguna yang perlu diproses.'),
   responseStyle: z
     .enum(['Supportive', 'Neutral Objective', 'Psychological'])
-    .describe('The desired response style from the AI.'),
+    .describe('Gaya respons yang diinginkan dari AI.'),
 });
 export type CustomizeAIResponseStyleInput = z.infer<
   typeof CustomizeAIResponseStyleInputSchema
 >;
 
 const CustomizeAIResponseStyleOutputSchema = z.object({
-  response: z.string().describe('The AI response tailored to the user feeling and response style.'),
+  response: z.string().describe('Respons AI yang disesuaikan dengan perasaan pengguna dan gaya respons.'),
 });
 export type CustomizeAIResponseStyleOutput = z.infer<
   typeof CustomizeAIResponseStyleOutputSchema
@@ -38,17 +38,17 @@ const prompt = ai.definePrompt({
   name: 'customizeAIResponseStylePrompt',
   input: {schema: CustomizeAIResponseStyleInputSchema},
   output: {schema: CustomizeAIResponseStyleOutputSchema},
-  prompt: `You are an AI assistant designed to provide responses based on the user's selected response style.
+  prompt: `Anda adalah asisten AI yang dirancang untuk memberikan respons dalam Bahasa Indonesia berdasarkan gaya respons yang dipilih pengguna.
 
-  The user is feeling: {{{feeling}}}
+  Pengguna merasa: {{{feeling}}}
 
-  The user has requested the following response style: {{{responseStyle}}}
+  Pengguna telah meminta gaya respons berikut: {{{responseStyle}}}
 
-  Based on the above information, provide a response that is tailored to the user's feeling and response style.
+  Berdasarkan informasi di atas, berikan respons yang disesuaikan dengan perasaan dan gaya respons pengguna.
 
-  If the response style is Supportive, be empathetic and encouraging.
-  If the response style is Neutral Objective, provide a balanced and unbiased perspective.
-  If the response style is Psychological, use cognitive reframing techniques to help the user.
+  Jika gaya responsnya Suportif, berikan empati dan dorongan.
+  Jika gaya responsnya Netral Objektif, berikan perspektif yang seimbang dan tidak bias.
+  Jika gaya responsnya Psikologis, gunakan teknik pembingkaian ulang kognitif untuk membantu pengguna.
   `,
 });
 

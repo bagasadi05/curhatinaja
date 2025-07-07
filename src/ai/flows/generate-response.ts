@@ -1,26 +1,26 @@
 'use server';
 
 /**
- * @fileOverview Generates a response to the user's text input in a chat mode.
+ * @fileOverview Menghasilkan respons terhadap input teks pengguna dalam mode obrolan.
  *
- * - generateResponse - A function that generates a response based on the user's input and selected response style.
- * - GenerateResponseInput - The input type for the generateResponse function.
- * - GenerateResponseOutput - The return type for the generateResponse function.
+ * - generateResponse - Fungsi yang menghasilkan respons berdasarkan input pengguna dan gaya respons yang dipilih.
+ * - GenerateResponseInput - Tipe input untuk fungsi generateResponse.
+ * - GenerateResponseOutput - Tipe kembalian untuk fungsi generateResponse.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateResponseInputSchema = z.object({
-  textInput: z.string().describe('The user\u0027s text input in the chat.'),
+  textInput: z.string().describe('Input teks pengguna dalam obrolan.'),
   responseStyle: z
     .enum(['Supportive', 'Neutral Objective', 'Psychological'])
-    .describe('The desired response style from the AI.'),
+    .describe('Gaya respons yang diinginkan dari AI.'),
 });
 export type GenerateResponseInput = z.infer<typeof GenerateResponseInputSchema>;
 
 const GenerateResponseOutputSchema = z.object({
-  responseText: z.string().describe('The AI generated response.'),
+  responseText: z.string().describe('Respons yang dihasilkan AI.'),
 });
 export type GenerateResponseOutput = z.infer<typeof GenerateResponseOutputSchema>;
 
@@ -32,17 +32,17 @@ const prompt = ai.definePrompt({
   name: 'generateResponsePrompt',
   input: {schema: GenerateResponseInputSchema},
   output: {schema: GenerateResponseOutputSchema},
-  prompt: `You are an AI assistant designed to provide support and guidance to users in a chat mode.
-Your goal is to generate responses that are empathetic, helpful, and tailored to the user\u0027s needs and the selected response style.
+  prompt: `Anda adalah asisten AI yang dirancang untuk memberikan dukungan dan bimbingan kepada pengguna dalam mode obrolan dalam Bahasa Indonesia.
+Tujuan Anda adalah menghasilkan respons yang empatik, membantu, dan disesuaikan dengan kebutuhan pengguna serta gaya respons yang dipilih.
 
-User Input: {{{textInput}}}
+Input Pengguna: {{{textInput}}}
 
-Response Style: {{{responseStyle}}}
+Gaya Respons: {{{responseStyle}}}
 
-Based on the user input and the selected response style, generate a response that demonstrates empathy and understanding.
-Incorporate cognitive reframing techniques where appropriate to help the user see their situation from a different perspective.
+Berdasarkan input pengguna dan gaya respons yang dipilih, hasilkan respons yang menunjukkan empati dan pengertian.
+Gunakan teknik pembingkaian ulang kognitif jika sesuai untuk membantu pengguna melihat situasi mereka dari perspektif yang berbeda.
 
-Response:`,
+Respons:`,
 });
 
 const generateResponseFlow = ai.defineFlow(

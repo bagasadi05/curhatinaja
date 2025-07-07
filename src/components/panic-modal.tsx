@@ -23,7 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Skeleton } from "./ui/skeleton";
 
 const formSchema = z.object({
-  userInput: z.string().min(10, "Please describe a bit more about what's happening."),
+  userInput: z.string().min(10, "Tolong jelaskan lebih lanjut apa yang sedang terjadi."),
 });
 
 export function PanicModal() {
@@ -44,7 +44,7 @@ export function PanicModal() {
       setResponse(result.comfortingResponse);
     } catch (error) {
       console.error("Error providing urgent support:", error);
-      setResponse("I'm having a little trouble connecting right now. Please remember to breathe deeply. You are safe.");
+      setResponse("Saya mengalami sedikit masalah saat menyambung. Ingatlah untuk bernapas dalam-dalam. Kamu aman.");
     } finally {
       setIsLoading(false);
     }
@@ -64,24 +64,24 @@ export function PanicModal() {
       <DialogTrigger asChild>
         <Button variant="destructive" className="w-full bg-rose-400 hover:bg-rose-500 text-white font-bold py-6 text-base rounded-lg shadow-lg transition-transform transform hover:scale-105">
           <AlertCircle className="mr-2 h-5 w-5" />
-          Panic / Need a Friend
+          Panik / Butuh Teman
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px] bg-background">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl flex items-center gap-2">
             <Zap className="w-6 h-6 text-yellow-500" />
-            Quick Support
+            Dukungan Cepat
           </DialogTitle>
           <DialogDescription>
-            You're not alone. Take a deep breath. Let's get through this together.
+            Kamu tidak sendiri. Tarik napas dalam-dalam. Mari kita lewati ini bersama.
           </DialogDescription>
         </DialogHeader>
         
         {response ? (
           <Alert variant="default" className="bg-primary/50 border-primary/50">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="font-headline">A Calming Thought</AlertTitle>
+            <AlertTitle className="font-headline">Pikiran yang Menenangkan</AlertTitle>
             <AlertDescription className="font-body">{response}</AlertDescription>
           </Alert>
         ) : isLoading ? (
@@ -100,7 +100,7 @@ export function PanicModal() {
                   <FormItem>
                     <FormControl>
                       <Textarea
-                        placeholder="Tell me what's on your mind. It's safe here."
+                        placeholder="Ceritakan apa yang ada di pikiranmu. Di sini aman."
                         className="resize-none"
                         rows={4}
                         {...field}
@@ -112,7 +112,7 @@ export function PanicModal() {
               />
               <DialogFooter>
                 <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/80 text-accent-foreground">
-                  Get Comfort
+                  Dapatkan Ketenangan
                 </Button>
               </DialogFooter>
             </form>
