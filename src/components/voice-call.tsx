@@ -100,22 +100,27 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     const audioEl = audioRef.current;
+    if (!audioEl) {
+        return;
+    }
 
     const handlePlay = () => setActivity('speaking');
-    const handleEnded = () => setActivity('idle');
+    const handleEnded = () => {
+        setActivity('idle');
+    };
 
-    if (audioEl) {
-      audioEl.addEventListener('play', handlePlay);
-      audioEl.addEventListener('ended', handleEnded);
-      audioEl.addEventListener('error', handleEnded);
-
-      return () => {
-        audioEl.removeEventListener('play', handlePlay);
-        audioEl.removeEventListener('ended', handleEnded);
-        audioEl.removeEventListener('error', handleEnded);
-      };
+    if (isOpen) {
+        audioEl.addEventListener('play', handlePlay);
+        audioEl.addEventListener('ended', handleEnded);
+        audioEl.addEventListener('error', handleEnded);
     }
-  }, []);
+    
+    return () => {
+      audioEl.removeEventListener('play', handlePlay);
+      audioEl.removeEventListener('ended', handleEnded);
+      audioEl.removeEventListener('error', handleEnded);
+    };
+  }, [isOpen]);
 
   const handleMicClick = () => {
     if (!recognitionRef.current) return;
