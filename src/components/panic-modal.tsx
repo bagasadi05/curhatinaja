@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,10 +26,10 @@ const formSchema = z.object({
   userInput: z.string().min(10, "Tolong jelaskan lebih lanjut apa yang sedang terjadi."),
 });
 
-export function PanicModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [response, setResponse] = useState<string | null>(null);
+export function PanicModal({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [response, setResponse] = React.useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,10 +62,7 @@ export function PanicModal() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="destructive" className="w-full font-bold py-6 text-base rounded-xl shadow-lg transition-all transform hover:scale-105 hover:shadow-red-500/50">
-          <AlertCircle className="mr-2 h-5 w-5" />
-          Panik / Butuh Teman
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px] bg-background">
         <DialogHeader>

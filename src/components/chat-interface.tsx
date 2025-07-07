@@ -22,19 +22,23 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { DailyAffirmation } from "@/components/daily-affirmation";
 import { EmotionJournal } from "@/components/emotion-journal";
 import { PanicModal } from "@/components/panic-modal";
 import { VoiceCall } from "@/components/voice-call";
 import { ChibiIcon } from "@/components/icons";
-import { Bot, Pause, Send, User, Volume2, Menu } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -147,41 +151,53 @@ export function ChatInterface() {
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center justify-between p-4 border-b bg-secondary/50 backdrop-blur-sm z-10">
-        <Sheet>
-          <SheetTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
               <span className="sr-only">Buka Menu</span>
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[320px] bg-secondary p-0 flex flex-col">
-              <SheetHeader className="flex flex-col items-center text-center gap-4 p-6 border-b border-border">
-                <ChibiIcon className="w-24 h-24 text-primary" />
-                <SheetTitle asChild>
-                  <h1 className="font-headline text-3xl text-foreground">
-                    CurhatinAja
-                  </h1>
-                </SheetTitle>
-                <SheetDescription asChild>
-                  <p className="text-sm text-muted-foreground">
-                   Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
-                  </p>
-                </SheetDescription>
-              </SheetHeader>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <Dialog>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  Afirmasi Harian
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DailyAffirmation />
+              </DialogContent>
+            </Dialog>
+            <Dialog>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  Jurnal Emosi
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <EmotionJournal />
+              </DialogContent>
+            </Dialog>
+            <DropdownMenuSeparator />
+            <VoiceCall>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                Mode Telepon
+              </DropdownMenuItem>
+            </VoiceCall>
+            <DropdownMenuSeparator />
+            <PanicModal>
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Dukungan Cepat
+              </DropdownMenuItem>
+            </PanicModal>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-              <ScrollArea className="flex-grow">
-                <div className="p-6 space-y-6">
-                    <DailyAffirmation />
-                    <EmotionJournal />
-                    <VoiceCall />
-                </div>
-              </ScrollArea>
-
-              <footer className="p-6 border-t border-border">
-                <PanicModal />
-              </footer>
-          </SheetContent>
-        </Sheet>
         <h2 className="text-xl font-headline text-foreground">
           CurhatinAja
         </h2>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,20 +20,20 @@ import { cn } from "@/lib/utils";
 const SpeechRecognition =
   (typeof window !== 'undefined' && (window.SpeechRecognition || (window as any).webkitSpeechRecognition));
 
-export function VoiceCall() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
-  const [status, setStatus] = useState("Ketuk untuk berbicara");
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+export function VoiceCall({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isListening, setIsListening] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isSpeaking, setIsSpeaking] = React.useState(false);
+  const [isReady, setIsReady] = React.useState(false);
+  const [transcript, setTranscript] = React.useState("");
+  const [aiResponse, setAiResponse] = React.useState("");
+  const [status, setStatus] = React.useState("Ketuk untuk berbicara");
+  const recognitionRef = React.useRef<SpeechRecognition | null>(null);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Effect for initializing SpeechRecognition
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) return;
 
     if (!SpeechRecognition) {
@@ -104,7 +104,7 @@ export function VoiceCall() {
   }, [isOpen]);
 
   // Effect for handling audio playback events
-  useEffect(() => {
+  React.useEffect(() => {
     const audioEl = audioRef.current;
     if (audioEl) {
         const handlePlay = () => {
@@ -167,13 +167,7 @@ export function VoiceCall() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start p-4 h-auto text-base gap-4 bg-secondary border-secondary/50 shadow-md">
-            <Phone className="w-6 h-6 text-primary" />
-            <div className="text-left">
-                <p className="font-headline text-foreground">Mode Telepon</p>
-                <p className="text-xs text-muted-foreground">Bicara langsung dengan AI.</p>
-            </div>
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-[70vh] flex flex-col">
         <DialogHeader>
