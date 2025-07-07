@@ -133,10 +133,10 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full p-4 md:p-6 bg-primary/20">
+    <div className="flex flex-col h-full p-4 md:p-6 bg-primary/10">
       <div className="flex-1 flex flex-col gap-4">
         <header className="text-center">
-            <h2 className="text-2xl md:text-3xl font-headline text-stone-800">Bagaimana perasaanmu hari ini?</h2>
+            <h2 className="text-2xl md:text-3xl font-headline text-foreground">Bagaimana perasaanmu hari ini?</h2>
             <p className="text-muted-foreground">Bagikan pemikiranmu dan mari kita bicarakan.</p>
         </header>
         <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
@@ -169,7 +169,7 @@ export function ChatInterface() {
                     "max-w-md rounded-2xl shadow-sm",
                     message.role === "user"
                       ? "bg-accent text-accent-foreground rounded-br-none"
-                      : "bg-white text-foreground rounded-bl-none"
+                      : "bg-secondary text-secondary-foreground rounded-bl-none"
                   )}
                 >
                   <CardContent className="p-3">
@@ -186,7 +186,7 @@ export function ChatInterface() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 shrink-0 text-foreground/60 hover:bg-black/5 hover:text-foreground"
+                                className="h-7 w-7 shrink-0 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                                 onClick={() => handlePlayPause(message.id, message.audioUrl)}
                             >
                                 {playingId === message.id ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -210,7 +210,7 @@ export function ChatInterface() {
         </ScrollArea>
       </div>
       <div className="mt-auto pt-4">
-        <Card className="rounded-xl shadow-lg">
+        <Card className="rounded-xl shadow-lg bg-secondary">
           <CardContent className="p-2">
             <Form {...form}>
               <form
@@ -225,7 +225,7 @@ export function ChatInterface() {
                       <FormControl>
                         <Textarea
                           placeholder="Ketik pesanmu di sini..."
-                          className="h-24 resize-none border-0 focus-visible:ring-0 shadow-none p-3"
+                          className="h-24 resize-none border-0 focus-visible:ring-0 shadow-none p-3 bg-transparent"
                           {...field}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {

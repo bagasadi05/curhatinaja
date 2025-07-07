@@ -19,9 +19,9 @@ export function EmotionJournal() {
   };
 
   const getEmotionFeedback = (value: number) => {
-    if (value < 33) return { icon: <Frown className="w-5 h-5 text-blue-500" />, label: "Merasa sedih" };
-    if (value < 66) return { icon: <Meh className="w-5 h-5 text-yellow-500" />, label: "Merasa biasa saja" };
-    return { icon: <Smile className="w-5 h-5 text-green-500" />, label: "Merasa baik" };
+    if (value < 33) return { icon: <Frown className="w-5 h-5 text-blue-400" />, label: "Merasa sedih" };
+    if (value < 66) return { icon: <Meh className="w-5 h-5 text-yellow-400" />, label: "Merasa biasa saja" };
+    return { icon: <Smile className="w-5 h-5 text-green-400" />, label: "Merasa baik" };
   }
 
   const {icon, label} = getEmotionFeedback(feeling);
@@ -29,7 +29,7 @@ export function EmotionJournal() {
   return (
     <Card className="bg-accent/50 border-accent/50 shadow-md">
       <CardHeader>
-        <CardTitle className="text-lg font-headline text-stone-700">Jurnal Emosi</CardTitle>
+        <CardTitle className="text-lg font-headline text-foreground">Jurnal Emosi</CardTitle>
         <CardDescription className="text-sm">Lacak perasaanmu dari waktu ke waktu.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

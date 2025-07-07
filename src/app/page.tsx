@@ -9,13 +9,13 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full bg-background">
       <div className="flex h-full min-h-screen">
-        <aside className="hidden md:flex flex-col w-[320px] p-6 bg-primary/40 border-r border-primary/20">
+        <aside className="hidden md:flex flex-col w-[320px] p-6 bg-secondary border-r border-border">
           <header className="flex flex-col items-center text-center gap-4 mb-8">
-            <ChibiIcon className="w-24 h-24 text-stone-700" />
-            <h1 className="font-headline text-3xl text-stone-800">
+            <ChibiIcon className="w-24 h-24 text-primary" />
+            <h1 className="font-headline text-3xl text-foreground">
               CurhatinAja
             </h1>
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-muted-foreground">
              Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
             </p>
           </header>

@@ -26,7 +26,7 @@ export function DailyAffirmation() {
     return (
         <Card className="bg-accent/50 border-accent/50 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-headline text-stone-700">Afirmasi Harian</CardTitle>
+                <CardTitle className="text-lg font-headline text-foreground">Afirmasi Harian</CardTitle>
                 <Quote className="h-5 w-5 text-accent-foreground" />
             </CardHeader>
             <CardContent>
