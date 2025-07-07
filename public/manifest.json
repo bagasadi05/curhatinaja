@@ -1,0 +1,21 @@
+{
+  "name": "CurhatinAja",
+  "short_name": "CurhatinAja",
+  "description": "Ruang amanmu untuk berbagi dan berefleksi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdfbf8",
+  "theme_color": "#e9e7f2",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
