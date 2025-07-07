@@ -201,7 +201,12 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-lg h-[80vh] flex flex-col p-0 bg-secondary">
+      <DialogContent 
+        className="sm:max-w-lg h-[80vh] flex flex-col p-0 bg-background"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.1), transparent 60%)'
+        }}
+      >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="font-headline text-2xl flex items-center gap-3">
             <Phone className="w-6 h-6 text-primary" />
@@ -222,10 +227,12 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
                 {conversation.map((entry, index) => (
                     <div key={index} className={cn("flex w-full", entry.speaker === 'user' ? 'justify-end' : 'justify-start')}>
                         <div className={cn(
-                            "max-w-[80%] rounded-xl px-4 py-2 shadow",
-                            entry.speaker === 'user' ? 'bg-accent text-accent-foreground rounded-br-sm' : 'bg-background text-foreground rounded-bl-sm'
+                            "max-w-[80%] px-4 py-3 shadow-xl",
+                             entry.speaker === 'user' 
+                                ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-3xl rounded-br-lg' 
+                                : 'bg-gradient-to-br from-secondary to-background text-foreground rounded-3xl rounded-bl-lg'
                         )}>
-                            <p>{entry.text}</p>
+                            <p className="drop-shadow-sm">{entry.text}</p>
                         </div>
                     </div>
                 ))}
@@ -233,7 +240,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
             </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-6 border-t border-border/50 bg-secondary/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center justify-center p-6 bg-transparent">
            <p className={cn(
                "text-sm font-medium h-5 mb-4 transition-colors", 
                lastError ? "text-destructive" : "text-muted-foreground"
@@ -243,9 +250,9 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
           <Button
             size="icon"
             className={cn(
-              "rounded-full w-20 h-20 transition-all duration-300 shadow-lg",
+              "rounded-full w-20 h-20 transition-all duration-300 shadow-2xl border-4 border-background/50",
               "focus-visible:ring-4 focus-visible:ring-primary/50",
-              activity === "listening" && "bg-red-500 hover:bg-red-600 animate-pulse",
+              activity === "listening" && "bg-destructive hover:bg-destructive/90 animate-shadow-pulse",
               activity === 'speaking' && "bg-blue-500 hover:bg-blue-600",
               activity === 'idle' && "bg-primary hover:bg-primary/90",
               activity === 'processing' && "bg-muted cursor-not-allowed"

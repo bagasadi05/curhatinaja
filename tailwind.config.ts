@@ -88,12 +88,17 @@ export default {
           '50%': { transform: 'scale(1.1)', opacity: '1' },
           '100%': { transform: 'scale(0.8)', opacity: '0.7' },
         },
+        'shadow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 0px 0px hsl(var(--destructive) / 0.5)' },
+          '50%': { boxShadow: '0 0 20px 10px hsl(var(--destructive) / 0.2)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slow-breathe': 'slow-breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'breathing-pulse': 'breathing-pulse 12s ease-in-out infinite',
+        'shadow-pulse': 'shadow-pulse 2s infinite ease-in-out',
       },
     },
   },
