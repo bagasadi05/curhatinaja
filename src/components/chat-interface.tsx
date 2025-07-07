@@ -146,7 +146,7 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center justify-between p-2 border-b bg-secondary shadow-sm z-10">
+      <header className="flex items-center justify-between p-4 border-b bg-secondary/50 backdrop-blur-sm z-10">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -188,12 +188,12 @@ export function ChatInterface() {
         <div className="w-9" />
       </header>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-primary/10">
+      <div className="flex-1 flex flex-col overflow-hidden bg-primary/5">
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="px-4 space-y-6 py-4">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
-                    <ChibiIcon className="w-32 h-32 text-accent/80" />
+                    <ChibiIcon className="w-32 h-32 text-primary/30" />
                     <p className="font-headline text-xl mt-4">Aku di sini untuk mendengarkan.</p>
                     <p>Ketik pesan pertamamu di bawah untuk memulai.</p>
                 </div>
@@ -207,19 +207,19 @@ export function ChatInterface() {
                 )}
               >
                 {message.role !== "user" && (
-                  <Avatar className="h-9 w-9 border-2 border-accent">
-                    <div className="bg-accent/50 w-full h-full flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-accent-foreground" />
+                  <Avatar className="h-9 w-9 border-2 border-primary">
+                    <div className="bg-primary/50 w-full h-full flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <AvatarFallback>AI</AvatarFallback>
                   </Avatar>
                 )}
                 <Card
                   className={cn(
-                    "max-w-md rounded-2xl shadow-sm",
+                    "max-w-md rounded-xl shadow-lg",
                     message.role === "user"
-                      ? "bg-accent text-accent-foreground rounded-br-none"
-                      : "bg-secondary text-secondary-foreground rounded-bl-none"
+                      ? "bg-accent text-accent-foreground rounded-br-sm"
+                      : "bg-secondary text-secondary-foreground rounded-bl-sm"
                   )}
                 >
                   <CardContent className="p-3">
@@ -259,7 +259,7 @@ export function ChatInterface() {
           </div>
         </ScrollArea>
       </div>
-      <div className="p-2 border-t bg-secondary">
+      <div className="p-2 border-t bg-secondary/50">
         <Card className="rounded-xl shadow-none border-0 bg-secondary">
           <CardContent className="p-2">
             <Form {...form}>
@@ -275,7 +275,7 @@ export function ChatInterface() {
                       <FormControl>
                         <Textarea
                           placeholder="Ketik pesanmu di sini..."
-                          className="h-24 resize-none border-0 focus-visible:ring-0 shadow-none p-3 bg-transparent"
+                          className="h-24 resize-none focus-visible:ring-2 p-3 bg-background/50 rounded-lg"
                           {...field}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
@@ -299,7 +299,7 @@ export function ChatInterface() {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-[150px]">
+                            <SelectTrigger className="w-[150px] bg-background/50">
                               <SelectValue placeholder="Gaya Respon" />
                             </SelectTrigger>
                           </FormControl>
@@ -315,7 +315,7 @@ export function ChatInterface() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="h-full bg-accent hover:bg-accent/80"
+                    className="h-full bg-primary hover:bg-primary/80"
                     disabled={form.formState.isSubmitting}
                   >
                     <Send className="h-5 w-5" />

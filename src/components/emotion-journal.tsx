@@ -27,7 +27,7 @@ export function EmotionJournal() {
   const {icon, label} = getEmotionFeedback(feeling);
 
   return (
-    <Card className="bg-accent/50 border-accent/50 shadow-md">
+    <Card className="bg-secondary border-secondary/50 shadow-md">
       <CardHeader>
         <CardTitle className="text-lg font-headline text-foreground">Jurnal Emosi</CardTitle>
         <CardDescription className="text-sm">Lacak perasaanmu dari waktu ke waktu.</CardDescription>
@@ -44,7 +44,7 @@ export function EmotionJournal() {
             />
         </div>
         <p className="text-center text-sm font-medium text-muted-foreground">{label}</p>
-        <Button onClick={handleLogEmotion} className="w-full bg-accent hover:bg-accent/80 text-accent-foreground">
+        <Button onClick={handleLogEmotion} className="w-full bg-primary hover:bg-primary/80 text-primary-foreground">
           Catat Perasaan Hari Ini
         </Button>
       </CardContent>

@@ -62,7 +62,7 @@ export function PanicModal() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="destructive" className="w-full font-bold py-6 text-base rounded-lg shadow-lg transition-transform transform hover:scale-105">
+        <Button variant="destructive" className="w-full font-bold py-6 text-base rounded-xl shadow-lg transition-all transform hover:scale-105 hover:shadow-red-500/50">
           <AlertCircle className="mr-2 h-5 w-5" />
           Panik / Butuh Teman
         </Button>
@@ -82,7 +82,7 @@ export function PanicModal() {
           <Alert variant="default" className="bg-primary/20 border-primary/20">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle className="font-headline">Pikiran yang Menenangkan</AlertTitle>
-            <AlertDescription className="font-body">{response}</AlertDescription>
+            <AlertDescription className="font-sans">{response}</AlertDescription>
           </Alert>
         ) : isLoading ? (
           <div className="space-y-2">
@@ -111,7 +111,7 @@ export function PanicModal() {
                 )}
               />
               <DialogFooter>
-                <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/80 text-accent-foreground">
+                <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/80 text-primary-foreground">
                   Dapatkan Ketenangan
                 </Button>
               </DialogFooter>

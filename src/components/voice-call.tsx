@@ -168,8 +168,8 @@ export function VoiceCall() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start p-4 h-auto text-base gap-4 bg-accent/50 border-accent/50 shadow-md">
-            <Phone className="w-6 h-6 text-accent-foreground" />
+        <Button variant="outline" className="w-full justify-start p-4 h-auto text-base gap-4 bg-secondary border-secondary/50 shadow-md">
+            <Phone className="w-6 h-6 text-primary" />
             <div className="text-left">
                 <p className="font-headline text-foreground">Mode Telepon</p>
                 <p className="text-xs text-muted-foreground">Bicara langsung dengan AI.</p>

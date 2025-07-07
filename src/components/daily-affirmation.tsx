@@ -24,13 +24,13 @@ export function DailyAffirmation() {
     }, []);
 
     return (
-        <Card className="bg-accent/50 border-accent/50 shadow-md">
+        <Card className="bg-secondary border-secondary/50 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg font-headline text-foreground">Afirmasi Harian</CardTitle>
-                <Quote className="h-5 w-5 text-accent-foreground" />
+                <Quote className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground font-body italic">
+                <p className="text-sm text-muted-foreground font-sans italic">
                     {affirmation || "Memuat dosis positivitas harianmu..."}
                 </p>
             </CardContent>
