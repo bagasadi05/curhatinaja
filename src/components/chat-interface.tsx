@@ -233,7 +233,7 @@ export function ChatInterface() {
           <div className="px-4 space-y-6 py-4">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
-                    <ChibiIcon className="w-32 h-32 text-primary/30" />
+                    <ChibiIcon className="w-32 h-32 text-primary/80 animate-slow-breathe" />
                     <p className="font-headline text-xl mt-4">Aku di sini untuk mendengarkan.</p>
                     <p>Ketik pesan pertamamu di bawah untuk memulai.</p>
                 </div>
