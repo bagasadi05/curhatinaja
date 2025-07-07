@@ -38,11 +38,9 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen w-full bg-background">
+    <>
       {showOnboarding && <OnboardingFlow onComplete={handleOnboardingComplete} />}
-      <main className="h-full w-full max-w-lg mx-auto border-x border-border">
-        <ChatInterface />
-      </main>
-    </div>
+      <ChatInterface />
+    </>
   );
 }

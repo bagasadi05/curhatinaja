@@ -23,30 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DailyAffirmation } from "@/components/daily-affirmation";
-import { EmotionJournal } from "@/components/emotion-journal";
-import { PanicModal } from "@/components/panic-modal";
-import { VoiceCall } from "@/components/voice-call";
-import { FriendChat } from "@/components/friend-chat";
 import { ChibiIcon } from "@/components/icons";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Bot, Pause, Send, User, Volume2, Menu, AlertCircle, Sparkles, BookHeart, Phone, Users } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2 } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -60,10 +38,13 @@ type ChatMessage = {
   audioUrl?: string;
 };
 
+export type ChatInterfaceHandles = {
+  handleEmotionLogged: (feelingLabel: string) => Promise<void>;
+};
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [isJournalOpen, setIsJournalOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -179,9 +160,7 @@ export function ChatInterface() {
     }
   }
 
-  async function handleEmotionLogged(feelingLabel: string) {
-    setIsJournalOpen(false); // Close the dialog
-
+  const handleEmotionLogged = async (feelingLabel: string) => {
     const proactiveIntro = `Aku melihat kamu baru saja mencatat bahwa kamu merasa ${feelingLabel.toLowerCase()}.`;
 
     const loadingMessage: ChatMessage = {
@@ -224,72 +203,12 @@ export function ChatInterface() {
             variant: "destructive"
         });
     }
-  }
+  };
+  
+  (window as any).handleEmotionLogged = handleEmotionLogged;
 
   return (
     <div className="flex flex-col h-full bg-transparent">
-      <header className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm z-10">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Buka Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-4 w-[300px] sm:w-[320px] bg-secondary border-r-border/50">
-            <SheetHeader>
-              <SheetTitle className="font-sans font-semibold text-2xl text-left">Menu</SheetTitle>
-            </SheetHeader>
-            <div className="mt-8 flex flex-col gap-1">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Sparkles className="mr-3 h-5 w-5 text-primary"/> Afirmasi Harian</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
-                    <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
-                    <DailyAffirmation />
-                  </DialogContent>
-                </Dialog>
-                <Dialog open={isJournalOpen} onOpenChange={setIsJournalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><BookHeart className="mr-3 h-5 w-5 text-primary"/> Jurnal Emosi</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
-                    <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
-                    <EmotionJournal onLog={handleEmotionLogged} />
-                  </DialogContent>
-                </Dialog>
-                <Separator className="my-2 bg-border/50" />
-                 <FriendChat>
-                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Users className="mr-3 h-5 w-5 text-primary"/> Diskusi Teman AI</Button>
-                </FriendChat>
-                <VoiceCall>
-                    <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Phone className="mr-3 h-5 w-5 text-primary"/> Mode Telepon</Button>
-                </VoiceCall>
-                <Separator className="my-2 bg-border/50" />
-                <PanicModal>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-base p-3 h-auto text-destructive hover:bg-destructive/10 hover:text-destructive focus:text-destructive"
-                  >
-                    <AlertCircle className="mr-3 h-5 w-5" />
-                    Dukungan Cepat
-                  </Button>
-                </PanicModal>
-            </div>
-          </SheetContent>
-        </Sheet>
-        
-        <div className="text-center">
-          <h2 className="text-xl font-poppins font-semibold text-foreground">
-            CurhatinAja
-          </h2>
-          <p className="text-sm font-poppins text-muted-foreground -mt-1">Aku di sini untuk mendengarkan...</p>
-        </div>
-
-        <ThemeToggle />
-      </header>
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="px-4 space-y-6 py-6">

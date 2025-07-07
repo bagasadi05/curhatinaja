@@ -75,7 +75,7 @@ const CustomYAxisTick = ({ y, payload }: any) => {
 
 
 type EmotionJournalProps = {
-  onLog?: (feelingLabel: string) => void;
+  onLog: (feelingLabel: string) => void;
 };
 
 export function EmotionJournal({ onLog }: EmotionJournalProps) {
@@ -161,7 +161,7 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
           title: "Emosi Dicatat!",
           description: `Rentetanmu sekarang ${currentStreak} hari. Teruslah berefleksi!`,
         });
-        onLog?.(selectedFeeling.label);
+        onLog(selectedFeeling.label);
       } catch (error) {
         console.error("Gagal menyimpan log emosi:", error);
         toast({
