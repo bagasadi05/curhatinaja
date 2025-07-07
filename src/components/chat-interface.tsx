@@ -32,6 +32,9 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DailyAffirmation } from "@/components/daily-affirmation";
@@ -174,7 +177,13 @@ export function ChatInterface() {
                   Afirmasi Harian
                 </DropdownMenuItem>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Afirmasi Harian</DialogTitle>
+                  <DialogDescription>
+                    Menampilkan afirmasi harian untuk motivasi.
+                  </DialogDescription>
+                </DialogHeader>
                 <DailyAffirmation />
               </DialogContent>
             </Dialog>
@@ -184,7 +193,13 @@ export function ChatInterface() {
                   Jurnal Emosi
                 </DropdownMenuItem>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Jurnal Emosi</DialogTitle>
+                  <DialogDescription>
+                    Catat dan lihat tren emosi harianmu.
+                  </DialogDescription>
+                </DialogHeader>
                 <EmotionJournal />
               </DialogContent>
             </Dialog>
