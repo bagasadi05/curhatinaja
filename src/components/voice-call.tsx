@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -22,7 +21,7 @@ const SpeechRecognition =
 type ActivityState = "idle" | "listening" | "processing" | "speaking";
 
 const statusMap: Record<ActivityState, string> = {
-  idle: "Ketuk ikon mikrofon untuk memulai",
+  idle: "Ketuk ikon untuk memulai",
   listening: "Saya mendengarkan...",
   processing: "Sedang berpikir...",
   speaking: "AI sedang berbicara...",
@@ -32,16 +31,10 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [activity, setActivity] = React.useState<ActivityState>("idle");
   const [isSupported, setIsSupported] = React.useState(true);
-  const [conversation, setConversation] = React.useState<{speaker: 'user' | 'ai', text: string}[]>([]);
   const [lastError, setLastError] = React.useState<string | null>(null);
 
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const conversationEndRef = React.useRef<HTMLDivElement>(null);
-  
-  React.useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation]);
 
   const cleanup = React.useCallback(() => {
     if (recognitionRef.current) {
@@ -83,7 +76,6 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
       recognition.onresult = async (event) => {
         const userTranscript = event.results[0][0].transcript;
-        setConversation(prev => [...prev, { speaker: 'user', text: userTranscript }]);
         setActivity("processing");
 
         try {
@@ -91,8 +83,6 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
             textInput: userTranscript,
           });
           
-          setConversation(prev => [...prev, { speaker: 'ai', text: response.responseText }]);
-
           const audioResult = await generateAudio(response.responseText);
           
           if (audioRef.current) {
@@ -128,7 +118,6 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
              errorMessage = "Layanan suara sedang sibuk. Coba lagi sebentar.";
           }
           setLastError(errorMessage);
-          setConversation(prev => [...prev, { speaker: 'ai', text: errorMessage }]);
           setActivity("idle");
         }
       };
@@ -171,6 +160,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
         setActivity('idle');
     } else if (activity === 'idle' && recognitionRef.current) {
       try {
+        setLastError(null);
         recognitionRef.current.start();
       } catch (e) {
         console.error("Could not start recognition:", e);
@@ -183,7 +173,6 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
     if (!open) {
       cleanup();
       setActivity("idle");
-      setConversation([]);
       setLastError(null);
     }
     setIsOpen(open);
@@ -194,7 +183,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
   const MicButtonIcon = () => {
     if (isBusy) return <LoaderCircle className="w-10 h-10 text-foreground/80 animate-spin" />;
-    if (activity === 'speaking') return <StopCircle className="w-10 h-10 text-white" />;
+    if (activity === 'speaking' || activity === 'listening') return <StopCircle className="w-10 h-10 text-white" />;
     return <Mic className="w-10 h-10 text-white" />;
   }
 
@@ -202,47 +191,35 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent 
-        className="sm:max-w-lg h-[80vh] flex flex-col p-0 bg-background"
-        style={{
-          backgroundImage: 'radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.1), transparent 60%)'
-        }}
+        className="sm:max-w-lg w-full h-[90vh] max-h-[700px] flex flex-col p-0 bg-black/90 backdrop-blur-sm border-0"
       >
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="font-headline text-2xl flex items-center gap-3">
-            <Phone className="w-6 h-6 text-primary" />
+        <DialogHeader className="p-6 pb-2 absolute top-0 left-0 right-0 z-10 bg-transparent">
+          <DialogTitle className="font-headline text-xl flex items-center gap-3 text-white/90">
+            <Phone className="w-5 h-5 text-primary" />
             Mode Panggilan Suara
           </DialogTitle>
-          <DialogDescription>
-            Bicaralah, dan AI akan merespons. Anda dapat mengetuk tombol untuk menyela.
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col overflow-hidden px-6">
-            <div className="flex-1 overflow-y-auto pr-4 -mr-4 space-y-4">
-                {conversation.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                        <p className="text-lg">Mulai percakapan...</p>
-                    </div>
-                )}
-                {conversation.map((entry, index) => (
-                    <div key={index} className={cn("flex w-full", entry.speaker === 'user' ? 'justify-end' : 'justify-start')}>
-                        <div className={cn(
-                            "max-w-[80%] px-4 py-3 shadow-xl",
-                             entry.speaker === 'user' 
-                                ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-3xl rounded-br-lg' 
-                                : 'bg-gradient-to-br from-secondary to-background text-foreground rounded-3xl rounded-bl-lg'
-                        )}>
-                            <p className="drop-shadow-sm">{entry.text}</p>
-                        </div>
-                    </div>
-                ))}
-                 <div ref={conversationEndRef} />
+        <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
+            <div className={cn(
+              "relative w-56 h-56 md:w-64 md:h-64 rounded-full transition-all duration-500 ease-in-out flex items-center justify-center",
+              (activity === 'speaking') && 'animate-orb-pulse',
+              activity === 'listening' && 'animate-orb-listening',
+            )}>
+              <div className="absolute inset-0 rounded-full bg-gradient-radial from-blue-500/60 via-purple-500/40 to-transparent blur-2xl"></div>
+              <div className={cn(
+                  "absolute inset-2 rounded-full bg-gradient-radial from-blue-400 to-purple-600 transition-all duration-300",
+                   activity === 'processing' && 'animate-orb-swirl'
+              )}></div>
+               {activity === 'processing' && (
+                  <LoaderCircle className="w-12 h-12 text-white/80 animate-spin-slow z-10" />
+              )}
             </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-6 bg-transparent">
+        <div className="flex flex-col items-center justify-center p-6 bg-transparent z-10">
            <p className={cn(
-               "text-sm font-medium h-5 mb-4 transition-colors", 
+               "text-sm font-medium h-5 mb-4 transition-colors text-white/70", 
                lastError ? "text-destructive" : "text-muted-foreground"
             )}>
               {status}
@@ -250,12 +227,13 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
           <Button
             size="icon"
             className={cn(
-              "rounded-full w-20 h-20 transition-all duration-300 shadow-2xl border-4 border-background/50",
+              "rounded-full w-20 h-20 transition-all duration-300 shadow-2xl border-4 border-black/30",
               "focus-visible:ring-4 focus-visible:ring-primary/50",
               activity === "listening" && "bg-destructive hover:bg-destructive/90 animate-shadow-pulse",
               activity === 'speaking' && "bg-blue-500 hover:bg-blue-600",
-              activity === 'idle' && "bg-primary hover:bg-primary/90",
-              activity === 'processing' && "bg-muted cursor-not-allowed"
+              (activity === 'idle' && !lastError) && "bg-primary hover:bg-primary/90",
+              lastError && "bg-yellow-500 hover:bg-yellow-600",
+              isBusy && "bg-muted cursor-not-allowed"
             )}
             onClick={handleMicClick}
             disabled={!isSupported || isBusy}

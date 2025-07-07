@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
       fontFamily: {
         sans: ['Poppins', 'sans-serif'],
         headline: ['Playfair Display', 'serif'],
@@ -92,6 +95,18 @@ export default {
           '0%, 100%': { boxShadow: '0 0 0px 0px hsl(var(--destructive) / 0.5)' },
           '50%': { boxShadow: '0 0 20px 10px hsl(var(--destructive) / 0.2)' },
         },
+        'orb-pulse': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.9' },
+          '50%': { transform: 'scale(1.05)', opacity: '1' },
+        },
+        'orb-listening': {
+          '0%, 100%': { transform: 'scale(1)', filter: 'brightness(1)' },
+          '50%': { transform: 'scale(1.1)', filter: 'brightness(1.2)' },
+        },
+        'orb-swirl': {
+          'from': { transform: 'rotate(0deg) scale(1.1)', filter: 'brightness(1.2)' },
+          'to': { transform: 'rotate(360deg) scale(1.1)', filter: 'brightness(1.2)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -99,6 +114,10 @@ export default {
         'slow-breathe': 'slow-breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'breathing-pulse': 'breathing-pulse 12s ease-in-out infinite',
         'shadow-pulse': 'shadow-pulse 2s infinite ease-in-out',
+        'orb-pulse': 'orb-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'orb-listening': 'orb-listening 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'orb-swirl': 'orb-swirl 1s linear infinite',
+        'spin-slow': 'spin 3s linear infinite',
       },
     },
   },
