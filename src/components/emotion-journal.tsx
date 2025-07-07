@@ -1,19 +1,28 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, subDays } from "date-fns";
+import { format, subDays, isToday, isYesterday } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Smile, Frown, Meh, BarChart3 } from "lucide-react";
+import { Smile, Frown, Meh, BarChart3, Flame } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 type EmotionLog = {
   date: string; // ISO 8601 string
   feeling: number;
 };
+
+type JournalData = {
+    logs: EmotionLog[];
+    streak: number;
+    lastLogDate: string | null;
+}
+
+const STORAGE_KEY = "curhatinaja-emotion-journal";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -30,33 +39,75 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function EmotionJournal() {
   const [feeling, setFeeling] = useState(50);
   const [logs, setLogs] = useState<EmotionLog[]>([]);
+  const [streak, setStreak] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     try {
-      const storedLogs = localStorage.getItem("emotion-journal-logs");
-      if (storedLogs) {
-        setLogs(JSON.parse(storedLogs));
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const data: JournalData = JSON.parse(storedData);
+        setLogs(data.logs || []);
+
+        // Calculate streak
+        if (data.lastLogDate) {
+            const lastDate = new Date(data.lastLogDate);
+            if (isToday(lastDate) || isYesterday(lastDate)) {
+                setStreak(data.streak);
+            } else {
+                setStreak(0); // Streak is broken
+            }
+        }
       }
     } catch (error) {
-        console.error("Gagal memuat log emosi:", error)
-        localStorage.removeItem("emotion-journal-logs");
+        console.error("Gagal memuat data jurnal:", error)
+        localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
   const handleLogEmotion = () => {
+    const today = new Date();
     const newLog: EmotionLog = {
-      date: new Date().toISOString(),
+      date: today.toISOString(),
       feeling: feeling,
     };
 
+    let currentStreak = streak;
+    let lastLogDate: Date | null = null;
+    try {
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (storedData) {
+            const data: JournalData = JSON.parse(storedData);
+            if (data.lastLogDate) {
+                lastLogDate = new Date(data.lastLogDate);
+            }
+        }
+    } catch (error) {
+        console.error("Gagal membaca data untuk memperbarui rentetan:", error);
+    }
+
+    if (lastLogDate && isYesterday(lastLogDate)) {
+        currentStreak++;
+    } else if (!lastLogDate || !isToday(lastLogDate)) {
+        // If they haven't logged today yet, or ever
+        currentStreak = 1;
+    }
+    // If they already logged today, streak doesn't change.
+
     const updatedLogs = [...logs, newLog];
     setLogs(updatedLogs);
+    setStreak(currentStreak);
+
     try {
-        localStorage.setItem("emotion-journal-logs", JSON.stringify(updatedLogs));
+        const dataToStore: JournalData = {
+            logs: updatedLogs,
+            streak: currentStreak,
+            lastLogDate: today.toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
         toast({
-          title: "Emosi Dicatat",
-          description: `Kamu telah mencatat perasaanmu hari ini. Teruslah berefleksi!`,
+          title: "Emosi Dicatat!",
+          description: `Rentetanmu sekarang ${currentStreak} hari. Teruslah berefleksi!`,
         });
     } catch (error) {
         console.error("Gagal menyimpan log emosi:", error);
@@ -90,9 +141,14 @@ export function EmotionJournal() {
     <Card className="bg-secondary border-secondary/50 shadow-md w-full">
       <CardHeader>
         <CardTitle className="text-lg font-headline text-foreground">Jurnal Emosi</CardTitle>
-        <CardDescription className="text-sm">Catat perasaanmu dan lihat tren emosimu selama 7 hari terakhir.</CardDescription>
+        <CardDescription className="text-sm">Catat perasaanmu dan lihat tren emosimu.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex items-center justify-center gap-2 text-muted-foreground font-medium">
+            <Flame className="w-5 h-5 text-orange-400" />
+            <p>Rentetan <strong>{streak}</strong> hari</p>
+        </div>
+        
         <div>
           <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Bagaimana perasaanmu hari ini?</h3>
           <div className="flex items-center justify-between gap-4">
@@ -133,3 +189,4 @@ export function EmotionJournal() {
     </Card>
   );
 }
+
