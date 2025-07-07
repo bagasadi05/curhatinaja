@@ -24,6 +24,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { DailyAffirmation } from "@/components/daily-affirmation";
@@ -151,15 +154,19 @@ export function ChatInterface() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[320px] bg-secondary p-0 flex flex-col">
-              <header className="flex flex-col items-center text-center gap-4 p-6 border-b border-border">
+              <SheetHeader className="flex flex-col items-center text-center gap-4 p-6 border-b border-border">
                 <ChibiIcon className="w-24 h-24 text-primary" />
-                <h1 className="font-headline text-3xl text-foreground">
-                  CurhatinAja
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                 Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
-                </p>
-              </header>
+                <SheetTitle asChild>
+                  <h1 className="font-headline text-3xl text-foreground">
+                    CurhatinAja
+                  </h1>
+                </SheetTitle>
+                <SheetDescription asChild>
+                  <p className="text-sm text-muted-foreground">
+                   Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
+                  </p>
+                </SheetDescription>
+              </SheetHeader>
 
               <ScrollArea className="flex-grow">
                 <div className="p-6 space-y-6">
