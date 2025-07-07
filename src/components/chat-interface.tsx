@@ -21,8 +21,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { DailyAffirmation } from "@/components/daily-affirmation";
+import { EmotionJournal } from "@/components/emotion-journal";
+import { PanicModal } from "@/components/panic-modal";
 import { ChibiIcon } from "@/components/icons";
-import { Bot, Pause, Send, User, Volume2 } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2, Menu } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -133,13 +141,46 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full p-4 md:p-6 bg-primary/10">
-      <div className="flex-1 flex flex-col gap-4">
-        <header className="text-center">
-            <h2 className="text-2xl md:text-3xl font-headline text-foreground">Bagaimana perasaanmu hari ini?</h2>
-            <p className="text-muted-foreground">Bagikan pemikiranmu dan mari kita bicarakan.</p>
-        </header>
-        <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
+    <div className="flex flex-col h-full bg-background">
+      <header className="flex items-center justify-between p-2 border-b bg-secondary shadow-sm z-10">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Buka Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[320px] bg-secondary p-0 flex flex-col">
+              <header className="flex flex-col items-center text-center gap-4 p-6 border-b border-border">
+                <ChibiIcon className="w-24 h-24 text-primary" />
+                <h1 className="font-headline text-3xl text-foreground">
+                  CurhatinAja
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                 Ruang aman untuk berbagi perasaan dan pikiranmu tanpa dihakimi.
+                </p>
+              </header>
+
+              <ScrollArea className="flex-grow">
+                <div className="p-6 space-y-6">
+                    <DailyAffirmation />
+                    <EmotionJournal />
+                </div>
+              </ScrollArea>
+
+              <footer className="p-6 border-t border-border">
+                <PanicModal />
+              </footer>
+          </SheetContent>
+        </Sheet>
+        <h2 className="text-xl font-headline text-foreground">
+          CurhatinAja
+        </h2>
+        <div className="w-9" />
+      </header>
+
+      <div className="flex-1 flex flex-col overflow-hidden bg-primary/10">
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="px-4 space-y-6 py-4">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
@@ -209,8 +250,8 @@ export function ChatInterface() {
           </div>
         </ScrollArea>
       </div>
-      <div className="mt-auto pt-4">
-        <Card className="rounded-xl shadow-lg bg-secondary">
+      <div className="p-2 border-t bg-secondary">
+        <Card className="rounded-xl shadow-none border-0 bg-secondary">
           <CardContent className="p-2">
             <Form {...form}>
               <form
