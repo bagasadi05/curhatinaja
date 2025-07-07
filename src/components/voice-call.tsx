@@ -25,15 +25,20 @@ export function VoiceCall() {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [status, setStatus] = useState("Ketuk untuk berbicara");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Effect for initializing SpeechRecognition
   useEffect(() => {
+    if (!isOpen) return;
+
     if (!SpeechRecognition) {
       setStatus("Maaf, browsermu tidak mendukung fitur suara.");
+      setIsReady(false);
       return;
     }
 
@@ -88,7 +93,12 @@ export function VoiceCall() {
     };
 
     recognitionRef.current = recognition;
+    setIsReady(true);
 
+  }, [isOpen]);
+
+  // Effect for handling audio playback events
+  useEffect(() => {
     const audioEl = audioRef.current;
     if (audioEl) {
         const handlePlay = () => {
@@ -103,15 +113,16 @@ export function VoiceCall() {
         audioEl.addEventListener('play', handlePlay);
         audioEl.addEventListener('ended', handleEnded);
         return () => {
+          if (audioEl) {
             audioEl.removeEventListener('play', handlePlay);
             audioEl.removeEventListener('ended', handleEnded);
+          }
         }
     }
-
-  }, [isOpen]);
+  }, []);
 
   const handleMicClick = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current || !isReady) return;
 
     if (isListening) {
       recognitionRef.current.stop();
@@ -133,6 +144,7 @@ export function VoiceCall() {
         setIsListening(false);
         setIsProcessing(false);
         setIsSpeaking(false);
+        setIsReady(false);
     }
   };
 
@@ -169,7 +181,7 @@ export function VoiceCall() {
                     (isProcessing || isSpeaking) && "animate-pulse"
                 )}
                 onClick={handleMicClick}
-                disabled={isProcessing || isSpeaking || !SpeechRecognition}
+                disabled={!isReady || isProcessing || isSpeaking || !SpeechRecognition}
             >
                 { isProcessing ? <LoaderCircle className="w-12 h-12 animate-spin" /> :
                   isListening ? <MicOff className="w-12 h-12 text-red-500" /> : <Mic className="w-12 h-12 text-primary" />
