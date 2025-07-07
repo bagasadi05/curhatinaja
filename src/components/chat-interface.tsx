@@ -246,6 +246,7 @@ export function ChatInterface() {
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><Sparkles className="mr-3 h-5 w-5 text-primary"/> Afirmasi Harian</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
+                    <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
                     <DailyAffirmation />
                   </DialogContent>
                 </Dialog>
@@ -254,6 +255,7 @@ export function ChatInterface() {
                     <Button variant="ghost" className="w-full justify-start text-base p-3 h-auto"><BookHeart className="mr-3 h-5 w-5 text-primary"/> Jurnal Emosi</Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+                    <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
                     <EmotionJournal onLog={handleEmotionLogged} />
                   </DialogContent>
                 </Dialog>
