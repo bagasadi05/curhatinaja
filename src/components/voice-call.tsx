@@ -83,7 +83,14 @@ export function VoiceCall() {
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error", event.error);
-      setStatus("Tidak bisa mendengar. Coba lagi.");
+      if (event.error === 'no-speech') {
+        setStatus("Saya tidak mendengar apa-apa. Ketuk untuk mencoba lagi.");
+      } else if (event.error === 'not-allowed') {
+        setStatus("Akses mikrofon ditolak. Periksa pengaturan browser.");
+        setIsReady(false);
+      } else {
+        setStatus("Tidak bisa mendengar. Coba lagi.");
+      }
       setIsListening(false);
       setIsProcessing(false);
     };
@@ -126,14 +133,23 @@ export function VoiceCall() {
 
     if (isListening) {
       recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
+    } else if (!isProcessing && !isSpeaking) {
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error("Error starting speech recognition:", e);
+        setIsListening(false);
+      }
     }
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open && (isListening || isProcessing)) {
+    if (!open && (isListening || isProcessing || isSpeaking)) {
       recognitionRef.current?.stop();
+      if(audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
     }
     setIsOpen(open);
     // Reset state on close
@@ -181,9 +197,9 @@ export function VoiceCall() {
                     (isProcessing || isSpeaking) && "animate-pulse"
                 )}
                 onClick={handleMicClick}
-                disabled={!isReady || isProcessing || isSpeaking || !SpeechRecognition}
+                disabled={!isReady || isProcessing || isSpeaking}
             >
-                { isProcessing ? <LoaderCircle className="w-12 h-12 animate-spin" /> :
+                { isProcessing || isSpeaking ? <LoaderCircle className="w-12 h-12 animate-spin" /> :
                   isListening ? <MicOff className="w-12 h-12 text-red-500" /> : <Mic className="w-12 h-12 text-primary" />
                 }
             </Button>
