@@ -5,15 +5,30 @@ import { useState, useEffect } from "react";
 import { format, subDays, isToday, isYesterday } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Smile, Frown, Meh, BarChart3, Flame } from "lucide-react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { BarChart3, Flame } from "lucide-react";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { cn } from "@/lib/utils";
+
+type EmotionLevel = {
+  level: number;
+  label: string;
+  emoji: string;
+  color: string;
+};
+
+const feelingLevels: EmotionLevel[] = [
+  { level: 1, emoji: '😭', label: 'Sangat Sedih', color: 'hsl(var(--chart-5))' },
+  { level: 2, emoji: '😔', label: 'Sedih', color: 'hsl(var(--chart-4))' },
+  { level: 3, emoji: '😐', label: 'Biasa Saja', color: 'hsl(var(--chart-3))' },
+  { level: 4, emoji: '😊', label: 'Senang', color: 'hsl(var(--chart-2))' },
+  { level: 5, emoji: '😁', label: 'Sangat Senang', color: 'hsl(var(--chart-1))' },
+];
 
 type EmotionLog = {
   date: string; // ISO 8601 string
-  feeling: number;
+  feeling: EmotionLevel;
 };
 
 type JournalData = {
@@ -26,25 +41,50 @@ const STORAGE_KEY = "curhatinaja-emotion-journal";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const value = payload[0].value;
+      const roundedLevel = Math.round(value);
+      const feeling = feelingLevels.find(f => f.level === roundedLevel);
+      
       return (
-        <div className="p-2 bg-secondary text-secondary-foreground rounded-lg shadow-lg">
+        <div className="p-2 bg-secondary text-secondary-foreground rounded-lg shadow-lg border border-border/50">
           <p className="font-bold">{`Tanggal: ${label}`}</p>
-          <p className="text-sm">{`Perasaan: ${payload[0].value.toFixed(0)}`}</p>
+          {feeling ? (
+             <p className="text-sm">{`Rata-rata: ${feeling.label}`}</p>
+          ) : (
+             <p className="text-sm">Tidak ada data</p>
+          )}
         </div>
       );
     }
     return null;
 };
 
+const CustomYAxisTick = ({ y, payload }: any) => {
+    const feeling = feelingLevels.find(l => l.level === payload.value);
+    if (feeling) {
+      return (
+        <g transform={`translate(-10, ${y})`}>
+          <text x={0} y={0} dy={4} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={16}>
+            {feeling.emoji}
+          </text>
+        </g>
+      );
+    }
+    return null;
+};
+
+
 type EmotionJournalProps = {
-  onLog?: (feeling: number) => void;
+  onLog?: (feelingLabel: string) => void;
 };
 
 export function EmotionJournal({ onLog }: EmotionJournalProps) {
-  const [feeling, setFeeling] = useState(50);
+  const [selectedFeeling, setSelectedFeeling] = useState<EmotionLevel | null>(null);
   const [logs, setLogs] = useState<EmotionLog[]>([]);
   const [streak, setStreak] = useState(0);
   const { toast } = useToast();
+  
+  const hasLoggedToday = logs.some(log => isToday(new Date(log.date)));
 
   useEffect(() => {
     try {
@@ -53,13 +93,12 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
         const data: JournalData = JSON.parse(storedData);
         setLogs(data.logs || []);
 
-        // Calculate streak
         if (data.lastLogDate) {
             const lastDate = new Date(data.lastLogDate);
             if (isToday(lastDate) || isYesterday(lastDate)) {
                 setStreak(data.streak);
             } else {
-                setStreak(0); // Streak is broken
+                setStreak(0);
             }
         }
       }
@@ -70,10 +109,19 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
   }, []);
 
   const handleLogEmotion = () => {
+    if (!selectedFeeling) {
+        toast({
+            title: "Pilih Perasaanmu",
+            description: "Silakan pilih salah satu emoji untuk mencatat perasaanmu.",
+            variant: "destructive"
+        })
+        return;
+    }
+
     const today = new Date();
     const newLog: EmotionLog = {
       date: today.toISOString(),
-      feeling: feeling,
+      feeling: selectedFeeling,
     };
 
     let currentStreak = streak;
@@ -90,14 +138,14 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
         console.error("Gagal membaca data untuk memperbarui rentetan:", error);
     }
 
-    if (lastLogDate && isYesterday(lastLogDate)) {
-        currentStreak++;
-    } else if (!lastLogDate || !isToday(lastLogDate)) {
-        // If they haven't logged today yet, or ever
-        currentStreak = 1;
+    if (!hasLoggedToday) {
+       if (lastLogDate && isYesterday(lastLogDate)) {
+            currentStreak++;
+        } else if (!lastLogDate || !isToday(lastLogDate)) {
+            currentStreak = 1;
+        }
     }
-    // If they already logged today, streak doesn't change.
-
+    
     const updatedLogs = [...logs.filter(log => format(new Date(log.date), 'yyyy-MM-dd') !== format(today, 'yyyy-MM-dd')), newLog];
     setLogs(updatedLogs);
     setStreak(currentStreak);
@@ -113,7 +161,7 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
           title: "Emosi Dicatat!",
           description: `Rentetanmu sekarang ${currentStreak} hari. Teruslah berefleksi!`,
         });
-        onLog?.(feeling);
+        onLog?.(selectedFeeling.label);
       } catch (error) {
         console.error("Gagal menyimpan log emosi:", error);
         toast({
@@ -124,21 +172,13 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
     }
   };
 
-  const getEmotionFeedback = (value: number) => {
-    if (value < 33) return { icon: <Frown className="w-5 h-5 text-blue-400" />, label: "Merasa sedih" };
-    if (value < 66) return { icon: <Meh className="w-5 h-5 text-yellow-400" />, label: "Merasa biasa saja" };
-    return { icon: <Smile className="w-5 h-5 text-green-400" />, label: "Merasa baik" };
-  };
-
-  const { icon, label } = getEmotionFeedback(feeling);
-
   const last7Days = Array.from({ length: 7 }).map((_, i) => subDays(new Date(), i)).reverse();
   const chartData = last7Days.map(date => {
-    const dayLogs = logs.filter(log => format(new Date(log.date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
-    const averageFeeling = dayLogs.length > 0 ? dayLogs.reduce((acc, curr) => acc + curr.feeling, 0) / dayLogs.length : 0;
+    const dayLog = logs.find(log => format(new Date(log.date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
     return {
       name: format(date, "EEE", { locale: id }),
-      feeling: averageFeeling,
+      feeling: dayLog ? dayLog.feeling.level : 0,
+      fill: dayLog ? dayLog.feeling.color : 'transparent'
     };
   });
 
@@ -155,22 +195,27 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
         </div>
         
         <div>
-          <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Bagaimana perasaanmu hari ini?</h3>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-shrink-0">{icon}</div>
-            <Slider
-              defaultValue={[feeling]}
-              max={100}
-              step={1}
-              onValueChange={(value) => setFeeling(value[0])}
-              className="flex-grow"
-            />
+          <h3 className="text-sm font-medium mb-4 text-center text-muted-foreground">Bagaimana perasaanmu hari ini?</h3>
+          <div className="flex items-center justify-around gap-2">
+            {feelingLevels.map((feeling) => (
+                <button 
+                    key={feeling.level}
+                    onClick={() => setSelectedFeeling(feeling)}
+                    className={cn(
+                        "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-14 h-14 justify-center",
+                        selectedFeeling?.level === feeling.level ? 'bg-primary/20 scale-110' : 'opacity-60 hover:opacity-100 hover:bg-primary/10',
+                    )}
+                    aria-label={feeling.label}
+                >
+                    <span className="text-2xl">{feeling.emoji}</span>
+                </button>
+            ))}
           </div>
-          <p className="text-center text-sm font-medium text-muted-foreground mt-2">{label}</p>
+           {selectedFeeling && <p className="text-center text-sm font-medium text-primary mt-4">{selectedFeeling.label}</p>}
         </div>
         
-        <Button onClick={handleLogEmotion} className="w-full bg-primary hover:bg-primary/80 text-primary-foreground">
-          Catat Perasaan Hari Ini
+        <Button onClick={handleLogEmotion} className="w-full bg-primary hover:bg-primary/80 text-primary-foreground" disabled={hasLoggedToday}>
+          {hasLoggedToday ? "Perasaan Hari Ini Sudah Dicatat" : "Catat Perasaan"}
         </Button>
 
         <div className="pt-4 border-t border-border/50">
@@ -178,11 +223,12 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
             {logs.length > 0 ? (
                 <div className="h-[150px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
                             <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 6]} tickCount={6} tick={<CustomYAxisTick />} />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsla(var(--accent), 0.5)' }} />
-                            <Bar dataKey="feeling" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="feeling" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

@@ -179,21 +179,10 @@ export function ChatInterface() {
     }
   }
 
-  async function handleEmotionLogged(feelingValue: number) {
+  async function handleEmotionLogged(feelingLabel: string) {
     setIsJournalOpen(false); // Close the dialog
 
-    const feelingMap: { [key: string]: string } = {
-        low: "sedih atau kurang bersemangat",
-        medium: "merasa biasa saja",
-        high: "merasa baik atau bersemangat",
-    };
-
-    let feelingDescription: string;
-    if (feelingValue < 33) feelingDescription = feelingMap.low;
-    else if (feelingValue < 66) feelingDescription = feelingMap.medium;
-    else feelingDescription = feelingMap.high;
-
-    const proactiveIntro = `Aku melihat kamu baru saja mencatat bahwa kamu ${feelingDescription}.`;
+    const proactiveIntro = `Aku melihat kamu baru saja mencatat bahwa kamu merasa ${feelingLabel.toLowerCase()}.`;
 
     const loadingMessage: ChatMessage = {
         id: `load-${Date.now()}`,
@@ -204,7 +193,7 @@ export function ChatInterface() {
 
     try {
         const result = await customizeAIResponseStyle({
-            feeling: feelingDescription,
+            feeling: feelingLabel,
             responseStyle: form.getValues("responseStyle"),
         });
         
