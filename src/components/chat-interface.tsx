@@ -60,7 +60,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
@@ -92,14 +92,20 @@ export function ChatInterface() {
   }, []);
 
   const handlePlayPause = (id: string, url?: string) => {
-    if (!url || !audioRef.current) return;
-
-    if (playingId === id) {
-      audioRef.current.pause();
+    if (!url) return;
+    
+    const currentAudio = audioRef.current;
+    if (playingId === id && currentAudio) {
+      currentAudio.pause();
       setPlayingId(null);
     } else {
-      audioRef.current.src = url;
-      audioRef.current.play();
+      if (currentAudio) {
+        currentAudio.pause();
+      }
+      const newAudio = new Audio(url);
+      newAudio.play();
+      newAudio.onended = () => setPlayingId(null);
+      audioRef.current = newAudio;
       setPlayingId(id);
     }
   };
@@ -178,9 +184,9 @@ export function ChatInterface() {
                 </DropdownMenuItem>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
-                <DialogHeader className="sr-only">
-                  <DialogTitle>Afirmasi Harian</DialogTitle>
-                  <DialogDescription>
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
+                  <DialogDescription className="sr-only">
                     Menampilkan afirmasi harian untuk motivasi dan mengatur notifikasi.
                   </DialogDescription>
                 </DialogHeader>
@@ -194,9 +200,9 @@ export function ChatInterface() {
                 </DropdownMenuItem>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
-                <DialogHeader className="sr-only">
-                  <DialogTitle>Jurnal Emosi</DialogTitle>
-                  <DialogDescription>
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
+                  <DialogDescription className="sr-only">
                     Catat dan lihat tren emosi harianmu.
                   </DialogDescription>
                 </DialogHeader>
@@ -228,9 +234,9 @@ export function ChatInterface() {
         <div className="w-9" />
       </header>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-primary/5">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="px-4 space-y-6 py-4">
+          <div className="px-4 space-y-6 py-6">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
                     <ChibiIcon className="w-32 h-32 text-primary/80 animate-slow-breathe" />
@@ -247,11 +253,10 @@ export function ChatInterface() {
                 )}
               >
                 {message.role !== "user" && (
-                  <Avatar className="h-9 w-9 border-2 border-primary">
-                    <div className="bg-primary/50 w-full h-full flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <AvatarFallback>AI</AvatarFallback>
+                  <Avatar className="h-9 w-9 bg-primary text-primary-foreground">
+                    <AvatarFallback>
+                      <Bot className="h-5 w-5" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
                 <Card
@@ -287,11 +292,10 @@ export function ChatInterface() {
                   </CardContent>
                 </Card>
                 {message.role === "user" && (
-                  <Avatar className="h-9 w-9 border-2 border-accent">
-                     <div className="bg-accent/50 w-full h-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-accent-foreground" />
-                    </div>
-                    <AvatarFallback>Anda</AvatarFallback>
+                  <Avatar className="h-9 w-9 bg-accent text-accent-foreground">
+                    <AvatarFallback>
+                        <User className="h-5 w-5" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
               </div>
@@ -299,72 +303,68 @@ export function ChatInterface() {
           </div>
         </ScrollArea>
       </div>
-      <div className="p-2 border-t bg-secondary/50">
-        <Card className="rounded-xl shadow-none border-0 bg-secondary">
-          <CardContent className="p-2">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex items-start gap-2"
-              >
-                <FormField
-                  control={form.control}
-                  name="textInput"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
+      <div className="p-4 border-t bg-background">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex items-end gap-2"
+          >
+            <FormField
+              control={form.control}
+              name="textInput"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormControl>
+                    <Textarea
+                      placeholder="Ketik pesanmu di sini..."
+                      className="min-h-[40px] resize-none focus-visible:ring-2 p-3 bg-secondary rounded-lg shadow-sm"
+                      {...field}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          form.handleSubmit(onSubmit)();
+                        }
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="flex flex-col gap-2">
+              <FormField
+                control={form.control}
+                name="responseStyle"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Textarea
-                          placeholder="Ketik pesanmu di sini..."
-                          className="h-24 resize-none focus-visible:ring-2 p-3 bg-background/50 rounded-lg"
-                          {...field}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              form.handleSubmit(onSubmit)();
-                            }
-                          }}
-                        />
+                        <SelectTrigger className="w-[150px] bg-secondary shadow-sm">
+                          <SelectValue placeholder="Gaya Respon" />
+                        </SelectTrigger>
                       </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <div className="flex flex-col gap-2 p-1">
-                  <FormField
-                    control={form.control}
-                    name="responseStyle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-[150px] bg-background/50">
-                              <SelectValue placeholder="Gaya Respon" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Supportive">Suportif</SelectItem>
-                            <SelectItem value="Neutral Objective">Netral Objektif</SelectItem>
-                            <SelectItem value="Psychological">Psikologis</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="h-full bg-primary hover:bg-primary/80"
-                    disabled={form.formState.isSubmitting}
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                      <SelectContent>
+                        <SelectItem value="Supportive">Suportif</SelectItem>
+                        <SelectItem value="Neutral Objective">Netral Objektif</SelectItem>
+                        <SelectItem value="Psychological">Psikologis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                size="default"
+                className="h-10 bg-primary hover:bg-primary/90"
+                disabled={form.formState.isSubmitting}
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
       <audio ref={audioRef} className="hidden" />
     </div>
