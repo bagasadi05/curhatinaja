@@ -32,6 +32,7 @@ import {
 import { DailyAffirmation } from "@/components/daily-affirmation";
 import { EmotionJournal } from "@/components/emotion-journal";
 import { PanicModal } from "@/components/panic-modal";
+import { VoiceCall } from "@/components/voice-call";
 import { ChibiIcon } from "@/components/icons";
 import { Bot, Pause, Send, User, Volume2, Menu } from "lucide-react";
 
@@ -172,6 +173,7 @@ export function ChatInterface() {
                 <div className="p-6 space-y-6">
                     <DailyAffirmation />
                     <EmotionJournal />
+                    <VoiceCall />
                 </div>
               </ScrollArea>
 
