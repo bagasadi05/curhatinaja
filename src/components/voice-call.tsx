@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { generateResponse } from "@/ai/flows/generate-response";
+import { generateVoiceResponse } from "@/ai/flows/generate-voice-response";
 import { generateAudio } from "@/ai/flows/generate-audio";
 import { Phone, Mic, MicOff, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -62,9 +62,8 @@ export function VoiceCall() {
       setStatus("Sedang berpikir...");
 
       try {
-        const response = await generateResponse({
+        const response = await generateVoiceResponse({
           textInput: currentTranscript,
-          responseStyle: "Supportive", // Default style for voice
         });
         setAiResponse(response.responseText);
         setStatus("Menyiapkan audio...");
