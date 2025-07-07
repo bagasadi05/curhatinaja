@@ -92,11 +92,18 @@ export default {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.03)', opacity: '0.9' },
         },
+        'breathing-pulse': {
+          '0%': { transform: 'scale(0.8)', opacity: '0.7' },
+          '33%': { transform: 'scale(1.1)', opacity: '1' },
+          '50%': { transform: 'scale(1.1)', opacity: '1' },
+          '100%': { transform: 'scale(0.8)', opacity: '0.7' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slow-breathe': 'slow-breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'breathing-pulse': 'breathing-pulse 12s ease-in-out infinite',
       },
     },
   },
