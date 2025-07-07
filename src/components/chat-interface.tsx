@@ -177,11 +177,11 @@ export function ChatInterface() {
                   Afirmasi Harian
                 </DropdownMenuItem>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+              <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
                 <DialogHeader className="sr-only">
                   <DialogTitle>Afirmasi Harian</DialogTitle>
                   <DialogDescription>
-                    Menampilkan afirmasi harian untuk motivasi.
+                    Menampilkan afirmasi harian untuk motivasi dan mengatur notifikasi.
                   </DialogDescription>
                 </DialogHeader>
                 <DailyAffirmation />
