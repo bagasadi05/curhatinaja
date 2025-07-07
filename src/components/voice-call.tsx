@@ -9,11 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { generateVoiceResponse } from "@/ai/flows/generate-voice-response";
 import { generateAudio } from "@/ai/flows/generate-audio";
-import { Phone, Mic, MicOff, LoaderCircle } from "lucide-react";
+import { Phone, Mic, StopCircle, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SpeechRecognition =
@@ -23,8 +22,8 @@ const SpeechRecognition =
 type ActivityState = "idle" | "listening" | "processing" | "speaking";
 
 const statusMap: Record<ActivityState, string> = {
-  idle: "Ketuk untuk berbicara",
-  listening: "Mendengarkan...",
+  idle: "Ketuk ikon mikrofon untuk memulai",
+  listening: "Saya mendengarkan...",
   processing: "Sedang berpikir...",
   speaking: "AI sedang berbicara...",
 };
@@ -33,12 +32,16 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [activity, setActivity] = React.useState<ActivityState>("idle");
   const [isSupported, setIsSupported] = React.useState(true);
-  const [transcript, setTranscript] = React.useState("");
-  const [aiResponse, setAiResponse] = React.useState("");
+  const [conversation, setConversation] = React.useState<{speaker: 'user' | 'ai', text: string}[]>([]);
   const [lastError, setLastError] = React.useState<string | null>(null);
 
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const conversationEndRef = React.useRef<HTMLDivElement>(null);
+  
+  React.useEffect(() => {
+    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversation]);
 
   const cleanup = React.useCallback(() => {
     if (recognitionRef.current) {
@@ -52,6 +55,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.src = "";
       audioRef.current.onplay = null;
       audioRef.current.onended = null;
       audioRef.current.onerror = null;
@@ -74,21 +78,20 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
       recognition.onstart = () => {
         setActivity("listening");
-        setTranscript("");
-        setAiResponse("");
         setLastError(null);
       };
 
       recognition.onresult = async (event) => {
-        const currentTranscript = event.results[0][0].transcript;
-        setTranscript(currentTranscript);
+        const userTranscript = event.results[0][0].transcript;
+        setConversation(prev => [...prev, { speaker: 'user', text: userTranscript }]);
         setActivity("processing");
 
         try {
           const response = await generateVoiceResponse({
-            textInput: currentTranscript,
+            textInput: userTranscript,
           });
-          setAiResponse(response.responseText);
+          
+          setConversation(prev => [...prev, { speaker: 'ai', text: response.responseText }]);
 
           const audioResult = await generateAudio(response.responseText);
           
@@ -113,17 +116,19 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
           newAudio.onended = onAudioEnd;
           newAudio.onerror = () => {
               console.error("Audio playback error");
+              setLastError("Gagal memutar audio.");
               onAudioEnd();
           };
 
           newAudio.play().catch(onAudioEnd);
         } catch (error) {
           console.error("Gagal memproses respons suara:", error);
+          let errorMessage = "Maaf, terjadi kesalahan. Coba lagi.";
           if (error instanceof Error && (error.message.includes("429") || error.message.includes("quota"))) {
-            setLastError("Layanan suara sedang sibuk. Coba lagi sebentar.");
-          } else {
-            setLastError("Terjadi kesalahan. Silakan coba lagi.");
+             errorMessage = "Layanan suara sedang sibuk. Coba lagi sebentar.";
           }
+          setLastError(errorMessage);
+          setConversation(prev => [...prev, { speaker: 'ai', text: errorMessage }]);
           setActivity("idle");
         }
       };
@@ -133,7 +138,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
         if (event.error === 'no-speech') {
             setLastError("Saya tidak mendengar apa-apa. Coba lagi.");
         } else if (event.error === 'not-allowed') {
-            setLastError("Izin mikrofon ditolak. Periksa pengaturan.");
+            setLastError("Izin mikrofon ditolak. Harap izinkan di pengaturan browser Anda.");
         } else {
             setLastError("Terjadi kesalahan pada mikrofon.");
         }
@@ -141,9 +146,10 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
       };
 
       recognition.onend = () => {
-        setActivity((currentActivity) =>
-          currentActivity === "listening" ? "idle" : currentActivity
-        );
+        setActivity(currentActivity => {
+            if (currentActivity === 'listening') return 'idle';
+            return currentActivity;
+        });
       };
 
       recognitionRef.current = recognition;
@@ -157,10 +163,13 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   const handleMicClick = () => {
     if (activity === 'listening') {
       recognitionRef.current?.stop();
-      return;
-    }
-
-    if (activity === 'idle' && recognitionRef.current) {
+    } else if (activity === 'speaking') {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setActivity('idle');
+    } else if (activity === 'idle' && recognitionRef.current) {
       try {
         recognitionRef.current.start();
       } catch (e) {
@@ -174,71 +183,79 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
     if (!open) {
       cleanup();
       setActivity("idle");
-      setTranscript("");
-      setAiResponse("");
+      setConversation([]);
       setLastError(null);
     }
     setIsOpen(open);
   };
 
-  const isBusy = activity === "processing" || activity === "speaking";
-  const status = lastError ?? (isSupported ? statusMap[activity] : "Browser tidak mendukung");
+  const isBusy = activity === "processing";
+  const status = lastError ?? (isSupported ? statusMap[activity] : "Browser Anda tidak mendukung fitur ini.");
+
+  const MicButtonIcon = () => {
+    if (isBusy) return <LoaderCircle className="w-10 h-10 text-foreground/80 animate-spin" />;
+    if (activity === 'speaking') return <StopCircle className="w-10 h-10 text-white" />;
+    return <Mic className="w-10 h-10 text-white" />;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] h-[70vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-headline text-2xl flex items-center gap-2">
+      <DialogContent className="sm:max-w-lg h-[80vh] flex flex-col p-0 bg-secondary">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle className="font-headline text-2xl flex items-center gap-3">
             <Phone className="w-6 h-6 text-primary" />
-            Mode Telepon
+            Mode Panggilan Suara
           </DialogTitle>
           <DialogDescription>
-            Bicaralah, dan AI akan merespons dengan suara.
+            Bicaralah, dan AI akan merespons. Anda dapat mengetuk tombol untuk menyela.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center justify-center flex-1 gap-6 text-center">
+
+        <div className="flex-1 flex flex-col overflow-hidden px-6">
+            <div className="flex-1 overflow-y-auto pr-4 -mr-4 space-y-4">
+                {conversation.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                        <p className="text-lg">Mulai percakapan...</p>
+                    </div>
+                )}
+                {conversation.map((entry, index) => (
+                    <div key={index} className={cn("flex w-full", entry.speaker === 'user' ? 'justify-end' : 'justify-start')}>
+                        <div className={cn(
+                            "max-w-[80%] rounded-xl px-4 py-2 shadow",
+                            entry.speaker === 'user' ? 'bg-accent text-accent-foreground rounded-br-sm' : 'bg-background text-foreground rounded-bl-sm'
+                        )}>
+                            <p>{entry.text}</p>
+                        </div>
+                    </div>
+                ))}
+                 <div ref={conversationEndRef} />
+            </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center p-6 border-t border-border/50 bg-secondary/80 backdrop-blur-sm">
+           <p className={cn(
+               "text-sm font-medium h-5 mb-4 transition-colors", 
+               lastError ? "text-destructive" : "text-muted-foreground"
+            )}>
+              {status}
+            </p>
           <Button
-            variant="outline"
             size="icon"
             className={cn(
-              "rounded-full w-28 h-28 border-4 transition-all duration-300",
-              activity === "listening"
-                ? "border-red-500 bg-red-500/20"
-                : "border-primary bg-primary/20",
-              isBusy && "animate-pulse"
+              "rounded-full w-20 h-20 transition-all duration-300 shadow-lg",
+              "focus-visible:ring-4 focus-visible:ring-primary/50",
+              activity === "listening" && "bg-red-500 hover:bg-red-600 animate-pulse",
+              activity === 'speaking' && "bg-blue-500 hover:bg-blue-600",
+              activity === 'idle' && "bg-primary hover:bg-primary/90",
+              activity === 'processing' && "bg-muted cursor-not-allowed"
             )}
             onClick={handleMicClick}
             disabled={!isSupported || isBusy}
           >
-            {isBusy ? (
-              <LoaderCircle className="w-12 h-12 animate-spin" />
-            ) : activity === "listening" ? (
-              <MicOff className="w-12 h-12 text-red-500" />
-            ) : (
-              <Mic className="w-12 h-12 text-primary" />
-            )}
+            <MicButtonIcon />
           </Button>
-          <p className={cn("text-lg font-medium h-6", lastError ? "text-destructive" : "text-foreground")}>{status}</p>
-
-          <div className="w-full text-left space-y-4 px-4 h-40 overflow-y-auto">
-            {transcript && (
-              <p>
-                <span className="font-bold">Anda:</span> {transcript}
-              </p>
-            )}
-            {aiResponse && (
-              <p>
-                <span className="font-bold">AI:</span> {aiResponse}
-              </p>
-            )}
-          </div>
         </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => handleOpenChange(false)}>
-            Tutup
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
