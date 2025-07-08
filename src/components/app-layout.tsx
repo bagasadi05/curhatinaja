@@ -7,7 +7,7 @@ import { EmotionJournal } from "@/components/emotion-journal";
 import { PanicModal } from "@/components/panic-modal";
 import { VoiceCall } from "@/components/voice-call";
 import { FriendChat } from "@/components/friend-chat";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { AlertCircle, BookHeart, Phone, Sparkles, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,8 +17,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleEmotionLogged = (feelingLabel: string) => {
     setIsJournalOpen(false); // Close the dialog
-    if (typeof (window as any).handleEmotionLogged === 'function') {
-      (window as any).handleEmotionLogged(feelingLabel);
+    if (typeof (window as { handleEmotionLogged?: (feelingLabel: string) => void }).handleEmotionLogged === 'function') {
+      (window as { handleEmotionLogged?: (feelingLabel: string) => void }).handleEmotionLogged!(feelingLabel);
     }
   };
 
@@ -34,8 +34,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-xs font-medium">Afirmasi</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg p-0 bg-transparent border-0 shadow-none">
+          <DialogContent
+            className="w-screen h-screen max-w-none max-h-none rounded-none p-0 sm:rounded-3xl sm:p-6 bg-background/90 backdrop-blur-md border-0 shadow-xl"
+          >
             <DialogTitle className="sr-only">Afirmasi Harian</DialogTitle>
+            <DialogDescription>
+              Dapatkan afirmasi harian untuk memulai harimu dengan semangat positif.
+            </DialogDescription>
             <DailyAffirmation />
           </DialogContent>
         </Dialog>
@@ -52,8 +57,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-xs font-medium">Jurnal</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none">
+          <DialogContent
+            className="w-screen h-screen max-w-none max-h-none rounded-none p-0 sm:rounded-3xl sm:p-6 bg-background/90 backdrop-blur-md border-0 shadow-xl"
+          >
             <DialogTitle className="sr-only">Jurnal Emosi</DialogTitle>
+            <DialogDescription>
+              Catat dan pantau perasaanmu setiap hari di jurnal emosi.
+            </DialogDescription>
             <EmotionJournal onLog={handleEmotionLogged} />
           </DialogContent>
         </Dialog>
@@ -115,10 +125,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background/80 backdrop-blur-sm border-t">
-        <div className="grid h-full grid-cols-5 max-w-lg mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 bg-background/90 backdrop-blur-md border-t shadow-lg">
+        <div className="grid h-full grid-cols-5 max-w-lg mx-auto px-4 gap-4">
             {navItems.map((item) => (
-                <div key={item.label} className="flex items-center justify-center">
+                <div key={item.label} className={cn(
+                  "flex items-center justify-center h-full transition-all duration-200",
+                  item.active && "-translate-y-1 text-primary scale-110"
+                )}>
                     {item.dialog}
                 </div>
             ))}

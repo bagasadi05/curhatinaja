@@ -12,8 +12,14 @@ import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import wav from 'wav';
 
-const GenerateAudioInputSchema = z.string();
-export type GenerateAudioInput = z.infer<typeof GenerateAudioInputSchema>;
+const GenerateAudioInputSchema = z.object({
+  text: z.string(),
+  voiceName: z.string().optional(),
+});
+export type GenerateAudioInput = {
+  text: string;
+  voiceName?: string;
+};
 
 const GenerateAudioOutputSchema = z.object({
   media: z
@@ -61,18 +67,19 @@ const generateAudioFlow = ai.defineFlow(
     inputSchema: GenerateAudioInputSchema,
     outputSchema: GenerateAudioOutputSchema,
   },
-  async query => {
+  async ({text, voiceName}) => {
+    const selectedVoice = voiceName || 'Kore';
     const {media} = await ai.generate({
       model: googleAI.model('gemini-2.5-flash-preview-tts'),
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: {voiceName: 'Algenib'},
+            prebuiltVoiceConfig: {voiceName: selectedVoice},
           },
         },
       },
-      prompt: query,
+      prompt: text,
     });
     if (!media) {
       throw new Error('No audio media was returned from the model.');

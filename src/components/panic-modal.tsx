@@ -112,7 +112,7 @@ export function PanicModal({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px] bg-background">
+      <DialogContent className="w-screen h-screen max-w-none max-h-none rounded-none p-0 sm:rounded-3xl sm:p-6 bg-background">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl flex items-center gap-2">
             <Zap className="w-6 h-6 text-yellow-400" />

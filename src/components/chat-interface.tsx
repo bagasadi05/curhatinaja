@@ -42,12 +42,15 @@ export type ChatInterfaceHandles = {
   handleEmotionLogged: (feelingLabel: string) => Promise<void>;
 };
 
+type WindowWithHandleEmotionLogged = Window & { handleEmotionLogged?: (feelingLabel: string) => Promise<void> };
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+  const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -130,7 +133,10 @@ export function ChatInterface() {
         prev.filter((m) => m.role !== "loading").concat(assistantMessage)
       );
 
-      generateAudio(result.responseText)
+      generateAudio({
+        text: result.responseText,
+        voiceName: voiceGender === 'female' ? 'Kore' : 'Algenib',
+      })
         .then(audioResult => {
             setMessages(prev => prev.map(m =>
                 m.id === assistantMessage.id ? { ...m, audioUrl: audioResult.media } : m
@@ -205,30 +211,30 @@ export function ChatInterface() {
     }
   };
   
-  (window as any).handleEmotionLogged = handleEmotionLogged;
+  (window as WindowWithHandleEmotionLogged).handleEmotionLogged = handleEmotionLogged;
 
   return (
     <div className="flex flex-col h-full bg-transparent">
       <div className="flex-1 flex flex-col overflow-hidden">
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="px-4 space-y-6 py-6">
+          <div className="px-4 space-y-8 py-10">
             {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20">
+                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20 animate-fade-in">
                     <ChibiIcon className="w-32 h-32 text-primary/80 animate-slow-breathe" />
-                    <p className="font-headline text-xl mt-4">Aku di sini untuk mendengarkan.</p>
-                    <p>Ketik pesan pertamamu di bawah untuk memulai.</p>
+                    <p className="font-headline text-2xl mt-4 text-primary">Aku di sini untuk mendengarkan.</p>
+                    <p className="text-lg">Ketik pesan pertamamu di bawah untuk memulai curhat. Semua cerita kamu aman di sini.</p>
                 </div>
             )}
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
-                  "flex items-start gap-3",
+                  "flex items-start gap-4 transition-all duration-300 animate-fade-in",
                   message.role === "user" && "justify-end"
                 )}
               >
                 {message.role !== "user" && (
-                  <Avatar className="h-9 w-9 bg-primary text-primary-foreground">
+                  <Avatar className="h-10 w-10 bg-primary text-primary-foreground shadow-lg">
                     <AvatarFallback>
                       <Bot className="h-5 w-5" />
                     </AvatarFallback>
@@ -236,13 +242,13 @@ export function ChatInterface() {
                 )}
                 <Card
                   className={cn(
-                    "max-w-md rounded-xl shadow-md",
+                    "max-w-md rounded-2xl shadow-xl border-2 border-border/60 transition-all duration-300",
                     message.role === "user"
-                      ? "bg-accent text-accent-foreground rounded-br-sm"
-                      : "bg-secondary text-secondary-foreground rounded-bl-sm"
+                      ? "bg-accent text-accent-foreground rounded-br-md border-primary/30"
+                      : "bg-secondary text-secondary-foreground rounded-bl-md border-secondary/40"
                   )}
                 >
-                  <CardContent className="p-3">
+                  <CardContent className="p-4">
                     {message.role === "loading" ? (
                       <div className="flex items-center space-x-2">
                         <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.3s]"></span>
@@ -251,12 +257,12 @@ export function ChatInterface() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between gap-2">
-                        <p className="whitespace-pre-wrap flex-1">{message.content}</p>
+                        <p className="whitespace-pre-wrap flex-1 text-base leading-relaxed">{message.content}</p>
                         {message.role === 'assistant' && message.audioUrl && (
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 shrink-0 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                                 onClick={() => handlePlayPause(message.id, message.audioUrl)}
                             >
                                 {playingId === message.id ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -267,7 +273,7 @@ export function ChatInterface() {
                   </CardContent>
                 </Card>
                 {message.role === "user" && (
-                  <Avatar className="h-9 w-9 bg-accent text-accent-foreground">
+                  <Avatar className="h-10 w-10 bg-accent text-accent-foreground shadow-lg">
                     <AvatarFallback>
                         <User className="h-5 w-5" />
                     </AvatarFallback>
@@ -294,7 +300,7 @@ export function ChatInterface() {
                       placeholder="Ketik pesanmu di sini..."
                       className="min-h-[44px] resize-none focus-visible:ring-2 p-3 bg-secondary rounded-xl shadow-inner"
                       {...field}
-                      onKeyDown={(e) => {
+                      onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           form.handleSubmit(onSubmit)();
@@ -338,6 +344,17 @@ export function ChatInterface() {
                   </FormItem>
                 )}
               />
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-foreground mb-1">Suara AI</label>
+              <select
+                className="rounded-lg border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                value={voiceGender}
+                onChange={e => setVoiceGender(e.target.value as 'female' | 'male')}
+              >
+                <option value="female">Cewe (natural)</option>
+                <option value="male">Cowo (natural)</option>
+              </select>
+            </div>
           </form>
         </Form>
       </div>

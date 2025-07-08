@@ -11,6 +11,8 @@ export default {
     extend: {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-main': 'linear-gradient(135deg,#7D4CFF,#02C8FF)',
+        'gradient-main-dark': 'linear-gradient(135deg,#835CFF,#00AEEF)',
       },
       fontFamily: {
         sans: ['Poppins', 'sans-serif'],
@@ -58,6 +60,10 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        'bg-primary': '#F9F7FF',
+        'text-primary': '#2B2770',
+        'card-bg': 'rgba(255,255,255,0.6)',
+        'danger': '#FF6161',
       },
       borderRadius: {
         lg: 'var(--radius)',

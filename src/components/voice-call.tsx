@@ -1,22 +1,30 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { generateVoiceResponse } from "@/ai/flows/generate-voice-response";
 import { generateAudio } from "@/ai/flows/generate-audio";
-import { Phone, Mic, StopCircle, LoaderCircle } from "lucide-react";
+import { Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SpeechRecognition =
+// Tambahkan deklarasi global untuk SpeechRecognition jika belum ada
+declare global {
+  interface Window {
+    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
+// Gunakan typeof window.SpeechRecognition untuk typing
+const SpeechRecognitionClass =
   typeof window !== "undefined" &&
-  (window.SpeechRecognition || (window as any).webkitSpeechRecognition);
+  (window.SpeechRecognition || window.webkitSpeechRecognition);
 
 type ActivityState = "idle" | "listening" | "processing" | "speaking";
 
@@ -27,11 +35,36 @@ const statusMap: Record<ActivityState, string> = {
   speaking: "AI sedang berbicara...",
 };
 
+// Komponen BubbleParticles
+const BubbleParticles = ({active}: {active: boolean}) => {
+  if (!active) return null;
+  // 8 bubble dengan posisi dan delay acak
+  return (
+    <>
+      {[...Array(8)].map((_, i) => (
+        <span
+          key={i}
+          className={
+            `absolute bottom-0 left-1/2 w-6 h-6 rounded-full bg-gradient-to-br
+            from-blue-200 via-pink-200 to-purple-200 opacity-70
+            blur-sm shadow-lg
+            animate-bubble${i}`
+          }
+          style={{
+            transform: `translateX(${(i - 4) * 32}px)`
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
 export function VoiceCall({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [activity, setActivity] = React.useState<ActivityState>("idle");
   const [isSupported, setIsSupported] = React.useState(true);
   const [lastError, setLastError] = React.useState<string | null>(null);
+  const [voiceGender, setVoiceGender] = React.useState<'female' | 'male'>('female');
 
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -58,13 +91,13 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (isOpen) {
-      if (!SpeechRecognition) {
+      if (!SpeechRecognitionClass) {
         setIsSupported(false);
         return;
       }
       setIsSupported(true);
 
-      const recognition = new SpeechRecognition();
+      const recognition = new (SpeechRecognitionClass as typeof window.SpeechRecognition)();
       recognition.lang = "id-ID";
       recognition.continuous = false;
       recognition.interimResults = false;
@@ -74,7 +107,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
         setLastError(null);
       };
 
-      recognition.onresult = async (event) => {
+      recognition.onresult = async (event: SpeechRecognitionEvent) => {
         const userTranscript = event.results[0][0].transcript;
         setActivity("processing");
 
@@ -82,8 +115,12 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
           const response = await generateVoiceResponse({
             textInput: userTranscript,
           });
-          
-          const audioResult = await generateAudio(response.responseText);
+          // Pilih voiceName berdasarkan gender
+          const voiceName = voiceGender === 'male' ? 'Algenib' : 'Kore';
+          const audioResult = await generateAudio({
+            text: response.responseText,
+            voiceName,
+          });
           
           if (audioRef.current) {
             audioRef.current.pause();
@@ -122,7 +159,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
         }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         if (event.error === 'no-speech') {
             setLastError("Saya tidak mendengar apa-apa. Coba lagi.");
@@ -147,28 +184,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
     }
 
     return cleanup;
-  }, [isOpen, cleanup]);
-
-  const handleMicClick = () => {
-    if (activity === 'listening') {
-      recognitionRef.current?.stop();
-    } else if (activity === 'speaking') {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-        }
-        setActivity('idle');
-    } else if (activity === 'idle' && recognitionRef.current) {
-      try {
-        setLastError(null);
-        setActivity("listening");
-        recognitionRef.current.start();
-      } catch (e) {
-        console.error("Could not start recognition:", e);
-        setActivity('idle');
-      }
-    }
-  };
+  }, [isOpen, cleanup, voiceGender]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -182,65 +198,55 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
   const isBusy = activity === "processing";
   const status = lastError ?? (isSupported ? statusMap[activity] : "Browser Anda tidak mendukung fitur ini.");
 
-  const MicButtonIcon = () => {
-    if (isBusy) return <LoaderCircle className="w-10 h-10 text-foreground/80 animate-spin" />;
-    if (activity === 'speaking' || activity === 'listening') return <StopCircle className="w-10 h-10 text-white" />;
-    return <Mic className="w-10 h-10 text-white" />;
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent 
-        className="sm:max-w-lg w-full h-[90vh] max-h-[700px] flex flex-col p-0 bg-black/90 backdrop-blur-sm border-0"
+        className="w-screen h-screen max-w-none max-h-none rounded-none p-0 sm:rounded-3xl sm:p-6 bg-black/90 backdrop-blur-sm border-0"
       >
-        <DialogHeader className="p-6 pb-2 absolute top-0 left-0 right-0 z-10 bg-transparent">
-          <DialogTitle className="font-headline text-xl flex items-center gap-3 text-white/90">
-            <Phone className="w-5 h-5 text-primary" />
-            Mode Panggilan Suara
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
+        {/* DialogTitle untuk aksesibilitas, hidden visual */}
+        <DialogTitle className="sr-only">Mode Panggilan Suara</DialogTitle>
+        <DialogDescription className="sr-only">
+          Dialog panggilan suara. Tekan dan tahan mikrofon untuk berbicara. Transkrip akan muncul di layar.
+        </DialogDescription>
+        <div className="flex flex-col items-center gap-4 px-4 py-6 w-full h-full justify-center">
+          <h2 className="font-poppins text-xl md:text-2xl text-white mt-2 mb-1 text-center">🎙️ Kamu Sedang Curhat Suara...</h2>
+          <p className="font-nunito text-base text-blue-100 mb-2 text-center">(Aku di sini untuk mendengarkan)</p>
+          <div className="w-full flex justify-center mb-2">
+            <select
+              className="rounded-lg border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              value={voiceGender}
+              onChange={e => setVoiceGender(e.target.value as 'female' | 'male')}
+              disabled={isBusy}
+            >
+              <option value="female">Cewe (natural)</option>
+              <option value="male">Cowo (natural)</option>
+            </select>
+          </div>
+          <div className="relative w-40 h-40 md:w-56 md:h-56 rounded-full flex items-center justify-center mb-4">
+            {/* Aura Glow */}
+            <div className="absolute w-full h-full rounded-full bg-gradient-radial from-pink-400/30 via-blue-400/20 to-purple-400/10 blur-3xl z-0 animate-glow" />
+            {/* Lingkaran Utama */}
             <div className={cn(
-              "relative w-56 h-56 md:w-64 md:h-64 rounded-full transition-all duration-500 ease-in-out flex items-center justify-center",
-              (activity === 'speaking') && 'animate-orb-pulse',
-              activity === 'listening' && 'animate-orb-listening',
+              "relative w-full h-full rounded-full bg-gradient-to-br from-purple-400 via-blue-400 to-pink-400 shadow-2xl flex items-center justify-center animate-pulse-glow",
+              activity === 'speaking' && 'ring-4 ring-blue-300/40 animate-wave',
             )}>
-              <div className="absolute inset-0 rounded-full bg-gradient-radial from-blue-500/60 via-purple-500/40 to-transparent blur-2xl"></div>
-              <div className={cn(
-                  "absolute inset-2 rounded-full bg-gradient-radial from-blue-400 to-purple-600 transition-all duration-300",
-                   activity === 'processing' && 'animate-orb-swirl'
-              )}></div>
-               {activity === 'processing' && (
-                  <LoaderCircle className="w-12 h-12 text-white/80 animate-spin-slow z-10" />
+              {/* Waveform/Expanding Ring */}
+              {activity === 'speaking' && (
+                <div className="absolute inset-0 rounded-full border-4 border-blue-300/40 animate-wave" />
               )}
+              {/* Gelembung 3D */}
+              <BubbleParticles active={activity === 'listening' || activity === 'processing'} />
+              {/* Ikon Mikrofon */}
+              <Mic className="w-16 h-16 md:w-20 md:h-20 text-white drop-shadow" />
             </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-center p-6 bg-transparent z-10">
-           <p className={cn(
-               "text-sm font-medium h-5 mb-4 transition-colors text-white/70", 
-               lastError ? "text-destructive" : "text-muted-foreground"
-            )}>
-              {status}
-            </p>
-          <Button
-            size="icon"
-            className={cn(
-              "rounded-full w-20 h-20 transition-all duration-300 shadow-2xl border-4 border-black/30",
-              "focus-visible:ring-4 focus-visible:ring-primary/50",
-              activity === "listening" && "bg-destructive hover:bg-destructive/90 animate-shadow-pulse",
-              activity === 'speaking' && "bg-blue-500 hover:bg-blue-600",
-              (activity === 'idle' && !lastError) && "bg-primary hover:bg-primary/90",
-              lastError && "bg-yellow-500 hover:bg-yellow-600",
-              isBusy && "bg-muted cursor-not-allowed"
-            )}
-            onClick={handleMicClick}
-            disabled={!isSupported || isBusy}
-          >
-            <MicButtonIcon />
-          </Button>
+          </div>
+          <p className={cn(
+            "text-sm font-medium h-5 mt-2 text-white/80 text-center", 
+            lastError ? "text-destructive" : "text-muted-foreground"
+          )}>
+            {status}
+          </p>
         </div>
       </DialogContent>
     </Dialog>

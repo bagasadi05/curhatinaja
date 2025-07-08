@@ -4,10 +4,8 @@
 import { useState, useEffect } from "react";
 import { format, subDays, isToday, isYesterday } from "date-fns";
 import { id } from "date-fns/locale";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart3, Flame } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +37,12 @@ type JournalData = {
 
 const STORAGE_KEY = "curhatinaja-emotion-journal";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+}
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
       const roundedLevel = Math.round(value);
@@ -59,8 +62,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-const CustomYAxisTick = ({ y, payload }: any) => {
-    const feeling = feelingLevels.find(l => l.level === payload.value);
+interface CustomYAxisTickProps {
+  y?: number;
+  payload?: { value: number };
+}
+const CustomYAxisTick = ({ y, payload }: CustomYAxisTickProps) => {
+    const feeling = feelingLevels.find(l => l.level === payload?.value);
     if (feeling) {
       return (
         <g transform={`translate(-10, ${y})`}>
@@ -183,60 +190,76 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
   });
 
   return (
-    <Card className="bg-secondary border-secondary/50 shadow-md w-full">
-      <CardHeader>
-        <CardTitle className="text-lg font-headline text-foreground">Jurnal Emosi</CardTitle>
-        <CardDescription className="text-sm">Catat perasaanmu dan lihat tren emosimu.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-center gap-2 text-muted-foreground font-medium">
-            <Flame className="w-5 h-5 text-orange-400" />
-            <p>Rentetan <strong>{streak}</strong> hari</p>
-        </div>
-        
-        <div>
-          <h3 className="text-sm font-medium mb-4 text-center text-muted-foreground">Bagaimana perasaanmu hari ini?</h3>
-          <div className="flex items-center justify-around gap-2">
-            {feelingLevels.map((feeling) => (
-                <button 
-                    key={feeling.level}
-                    onClick={() => setSelectedFeeling(feeling)}
-                    className={cn(
-                        "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-14 h-14 justify-center",
-                        selectedFeeling?.level === feeling.level ? 'bg-primary/20 scale-110' : 'opacity-60 hover:opacity-100 hover:bg-primary/10',
-                    )}
-                    aria-label={feeling.label}
-                >
-                    <span className="text-2xl">{feeling.emoji}</span>
-                </button>
-            ))}
+    <div className="w-full max-w-xl mx-auto">
+      <div className="relative rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl border border-primary/30 p-6 md:p-10 space-y-10">
+        {/* Overlay gelap dihapus, karena background sudah gelap */}
+        <div className="relative flex flex-col items-center gap-2 z-10">
+          <h2 className="font-headline text-4xl md:text-5xl text-white drop-shadow-lg mb-2" style={{textShadow: '0 2px 8px #0008'}}>Jurnal Emosi</h2>
+          <p className="text-lg text-blue-200 font-semibold mb-4" style={{textShadow: '0 1px 4px #0008'}}>Catat perasaanmu & lihat perjalanan emosimu 🌈</p>
+          <div className="flex items-center gap-3 bg-gray-800/80 rounded-xl px-4 py-2 shadow border border-orange-400 mb-6">
+            <span className="text-orange-400 text-xl">🔥</span>
+            <span className="font-bold text-orange-200">{streak}</span>
+            <span className="text-sm text-orange-300">hari berturut-turut</span>
           </div>
-           {selectedFeeling && <p className="text-center text-sm font-medium text-primary mt-4">{selectedFeeling.label}</p>}
         </div>
-        
-        <Button onClick={handleLogEmotion} className="w-full bg-primary hover:bg-primary/80 text-primary-foreground" disabled={hasLoggedToday}>
-          {hasLoggedToday ? "Perasaan Hari Ini Sudah Dicatat" : "Catat Perasaan"}
-        </Button>
-
-        <div className="pt-4 border-t border-border/50">
-            <h3 className="text-md font-headline mb-2 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary"/>Tren Emosi 7 Hari</h3>
-            {logs.length > 0 ? (
-                <div className="h-[150px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-                            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 6]} tickCount={6} tick={<CustomYAxisTick />} />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsla(var(--accent), 0.5)' }} />
-                            <Bar dataKey="feeling" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            ) : (
-                <p className="text-center text-sm text-muted-foreground py-10">Belum ada data. Mulai catat perasaanmu untuk melihat tren.</p>
-            )}
+        {/* Emoji Picker */}
+        <div className="relative flex items-center justify-center gap-4 mb-8 z-10">
+          {feelingLevels.map((feeling) => (
+            <button
+              key={feeling.level}
+              type="button"
+              title={feeling.label}
+              aria-label={feeling.label}
+              className={cn(
+                "w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-lg border-2 border-white/30 bg-gray-700/90 hover:scale-110 transition-all duration-200",
+                selectedFeeling?.level === feeling.level ? "ring-4 ring-primary/60 scale-110" : ""
+              )}
+              onClick={() => setSelectedFeeling(feeling)}
+              disabled={hasLoggedToday}
+            >
+              {feeling.emoji}
+            </button>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+        {/* Button log emosi */}
+        <button
+          className={cn(
+            "w-full py-3 rounded-xl font-bold text-lg bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 text-white shadow-lg transition-all duration-200 mb-8",
+            hasLoggedToday && "opacity-60 bg-gray-600 text-gray-300 cursor-not-allowed"
+          )}
+          onClick={handleLogEmotion}
+          disabled={hasLoggedToday}
+        >
+          {hasLoggedToday ? "Perasaan Hari Ini Sudah Dicatat" : "Catat Perasaan Hari Ini"}
+        </button>
+        {/* Chart */}
+        <div className="relative z-10 mb-6">
+          <h3 className="font-semibold text-blue-200 mb-2 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-primary"/>Tren Emosi 7 Hari</h3>
+          {logs.length > 0 ? (
+              <div className="h-[180px] w-full animate-fade-in">
+                  <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e7ff" />
+                          <XAxis dataKey="name" stroke="#a78bfa" fontSize={14} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#a78bfa" fontSize={14} tickLine={false} axisLine={false} domain={[0, 6]} tickCount={6} tick={<CustomYAxisTick />} />
+                          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f3e8ff' }} />
+                          <Bar dataKey="feeling" radius={[8, 8, 0, 0]} fill="#a78bfa" />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </div>
+          ) : (
+              <div className="text-center text-muted-foreground py-6 animate-fade-in">Belum ada data tren emosi.</div>
+          )}
+        </div>
+        {/* Empty state jika belum ada log */}
+        {logs.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-10 text-center text-blue-100 space-y-2 z-10">
+            <span className="text-6xl mb-2">🌤️</span>
+            <p className="font-semibold text-lg">Belum ada catatan emosi</p>
+            <p className="text-sm">Mulai catat perasaanmu hari ini untuk melihat tren emosimu di sini.</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

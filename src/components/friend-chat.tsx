@@ -107,7 +107,7 @@ export function FriendChat({ children }: { children: React.ReactNode }) {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-xl h-[85vh] flex flex-col p-0 bg-background">
+      <DialogContent className="w-screen h-screen max-w-none max-h-none rounded-none p-0 sm:rounded-3xl sm:p-6 bg-background">
         <DialogHeader className="p-6 pb-2 border-b">
           <DialogTitle className="font-headline text-2xl flex items-center gap-3">
             <Users className="w-6 h-6 text-primary" />

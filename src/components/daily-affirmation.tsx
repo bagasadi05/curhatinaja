@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -52,7 +52,7 @@ export function DailyAffirmation() {
 
         const [hours, minutes] = time.split(':').map(Number);
         const now = new Date();
-        let nextNotificationDate = new Date();
+        const nextNotificationDate = null;
         nextNotificationDate.setHours(hours, minutes, 0, 0);
 
         if (nextNotificationDate <= now) {
