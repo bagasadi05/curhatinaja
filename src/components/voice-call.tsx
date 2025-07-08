@@ -161,6 +161,7 @@ export function VoiceCall({ children }: { children: React.ReactNode }) {
     } else if (activity === 'idle' && recognitionRef.current) {
       try {
         setLastError(null);
+        setActivity("listening");
         recognitionRef.current.start();
       } catch (e) {
         console.error("Could not start recognition:", e);
