@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChatInterface } from "@/components/chat-interface";
 import { OnboardingFlow } from '@/components/onboarding-flow';
 
+
 const ONBOARDING_KEY = 'curhatinaja-onboarding-complete';
 
 export default function Home() {
@@ -38,9 +39,12 @@ export default function Home() {
   }
 
   return (
-    <>
-      {showOnboarding && <OnboardingFlow onComplete={handleOnboardingComplete} />}
-      <ChatInterface />
-    </>
+    <main>
+      {showOnboarding ? (
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
+      ) : (
+        <ChatInterface />
+      )}
+    </main>
   );
 }

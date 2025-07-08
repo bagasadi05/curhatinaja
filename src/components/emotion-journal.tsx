@@ -190,20 +190,18 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
   });
 
   return (
-    <div className="w-full max-w-xl mx-auto">
-      <div className="relative rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl border border-primary/30 p-6 md:p-10 space-y-10">
-        {/* Overlay gelap dihapus, karena background sudah gelap */}
-        <div className="relative flex flex-col items-center gap-2 z-10">
-          <h2 className="font-headline text-4xl md:text-5xl text-white drop-shadow-lg mb-2" style={{textShadow: '0 2px 8px #0008'}}>Jurnal Emosi</h2>
-          <p className="text-lg text-blue-200 font-semibold mb-4" style={{textShadow: '0 1px 4px #0008'}}>Catat perasaanmu & lihat perjalanan emosimu 🌈</p>
-          <div className="flex items-center gap-3 bg-gray-800/80 rounded-xl px-4 py-2 shadow border border-orange-400 mb-6">
-            <span className="text-orange-400 text-xl">🔥</span>
-            <span className="font-bold text-orange-200">{streak}</span>
-            <span className="text-sm text-orange-300">hari berturut-turut</span>
+    <div className="h-full w-full bg-gradient-to-br from-gray-900 via-purple-900/90 to-blue-900/80">
+      <div className="h-full w-full overflow-y-auto p-4 sm:p-6 md:p-8 flex flex-col">
+        <div className="relative flex flex-col items-center text-center z-10 mb-8">
+          <h2 className="font-headline text-3xl md:text-4xl text-white font-bold drop-shadow-lg mb-2">Bagaimana Perasaanmu Hari Ini?</h2>
+          <p className="text-base text-blue-200/90 mb-6">Pilih satu emoji yang paling mewakili perasaanmu.</p>
+          <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 shadow-inner border border-white/20">
+            <span className="text-lg">🔥</span>
+            <span className="font-bold text-white text-sm">{streak} Hari Beruntun</span>
           </div>
         </div>
         {/* Emoji Picker */}
-        <div className="relative flex items-center justify-center gap-4 mb-8 z-10">
+        <div className="relative grid grid-cols-5 gap-3 sm:gap-4 mb-8 z-10">
           {feelingLevels.map((feeling) => (
             <button
               key={feeling.level}
@@ -211,21 +209,23 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
               title={feeling.label}
               aria-label={feeling.label}
               className={cn(
-                "w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-lg border-2 border-white/30 bg-gray-700/90 hover:scale-110 transition-all duration-200",
-                selectedFeeling?.level === feeling.level ? "ring-4 ring-primary/60 scale-110" : ""
+                "aspect-square rounded-2xl flex flex-col items-center justify-center text-3xl md:text-4xl shadow-lg border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 transform hover:-translate-y-1",
+                selectedFeeling?.level === feeling.level ? "ring-2 ring-primary bg-primary/20 scale-105" : "hover:border-white/30",
+                hasLoggedToday && "opacity-60 cursor-not-allowed"
               )}
               onClick={() => setSelectedFeeling(feeling)}
               disabled={hasLoggedToday}
             >
-              {feeling.emoji}
+              <span className="mb-1">{feeling.emoji}</span>
+              <span className="text-xs font-medium text-white/80">{feeling.label}</span>
             </button>
           ))}
         </div>
         {/* Button log emosi */}
         <button
           className={cn(
-            "w-full py-3 rounded-xl font-bold text-lg bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 text-white shadow-lg transition-all duration-200 mb-8",
-            hasLoggedToday && "opacity-60 bg-gray-600 text-gray-300 cursor-not-allowed"
+            "w-full py-3 rounded-xl font-bold text-base sm:text-lg bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-200 mb-8 disabled:opacity-50 disabled:cursor-not-allowed",
+            !selectedFeeling && !hasLoggedToday && "opacity-50 cursor-not-allowed"
           )}
           onClick={handleLogEmotion}
           disabled={hasLoggedToday}
@@ -233,22 +233,28 @@ export function EmotionJournal({ onLog }: EmotionJournalProps) {
           {hasLoggedToday ? "Perasaan Hari Ini Sudah Dicatat" : "Catat Perasaan Hari Ini"}
         </button>
         {/* Chart */}
-        <div className="relative z-10 mb-6">
-          <h3 className="font-semibold text-blue-200 mb-2 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-primary"/>Tren Emosi 7 Hari</h3>
+        <div className="relative z-10 mb-6 bg-white/5 border border-white/10 rounded-2xl p-4">
+          <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary"/>Tren Emosi 7 Hari Terakhir</h3>
           {logs.length > 0 ? (
-              <div className="h-[180px] w-full animate-fade-in">
+              <div className="h-[160px] sm:h-[180px] w-full animate-fade-in">
                   <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e7ff" />
-                          <XAxis dataKey="name" stroke="#a78bfa" fontSize={14} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#a78bfa" fontSize={14} tickLine={false} axisLine={false} domain={[0, 6]} tickCount={6} tick={<CustomYAxisTick />} />
-                          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f3e8ff' }} />
-                          <Bar dataKey="feeling" radius={[8, 8, 0, 0]} fill="#a78bfa" />
+                      <BarChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorFeeling" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.1}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsla(0, 0%, 100%, 0.1)" />
+                          <XAxis dataKey="name" stroke="hsla(0, 0%, 100%, 0.5)" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="hsla(0, 0%, 100%, 0.5)" fontSize={12} tickLine={false} axisLine={false} domain={[0, 5]} tickCount={6} tick={<CustomYAxisTick />} />
+                          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsla(0, 0%, 100%, 0.1)' }} />
+                          <Bar dataKey="feeling" radius={[4, 4, 0, 0]} fill="url(#colorFeeling)" />
                       </BarChart>
                   </ResponsiveContainer>
               </div>
           ) : (
-              <div className="text-center text-muted-foreground py-6 animate-fade-in">Belum ada data tren emosi.</div>
+              <div className="text-center text-white/60 py-10 animate-fade-in">Mulai catat perasaanmu untuk melihat tren emosi di sini.</div>
           )}
         </div>
         {/* Empty state jika belum ada log */}

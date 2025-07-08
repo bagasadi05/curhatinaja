@@ -37,6 +37,7 @@ export function DailyAffirmation() {
         new Notification('Afirmasi Harian Untukmu ✨', {
             body: randomAffirmation,
             icon: '/icons/icon-192x192.png',
+            // @ts-expect-error: NotificationOptions.renotify is not typed in some browsers
             renotify: true,
             tag: 'daily-affirmation',
         });
@@ -52,7 +53,7 @@ export function DailyAffirmation() {
 
         const [hours, minutes] = time.split(':').map(Number);
         const now = new Date();
-        const nextNotificationDate = null;
+        const nextNotificationDate = new Date();
         nextNotificationDate.setHours(hours, minutes, 0, 0);
 
         if (nextNotificationDate <= now) {
@@ -150,45 +151,47 @@ export function DailyAffirmation() {
     };
 
     return (
-        <Card className="bg-secondary border-secondary/50 shadow-md">
-            <CardHeader className="pb-4">
-                <div className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg font-headline text-foreground">Afirmasi Harian</CardTitle>
-                    <Quote className="h-5 w-5 text-primary" />
-                </div>
-                <CardDescription className="text-sm pt-2 text-muted-foreground font-sans italic">
-                    {affirmation || "Memuat dosis positivitas harianmu..."}
-                </CardDescription>
-            </CardHeader>
-            <CardFooter className="flex flex-col gap-4 pt-4 border-t border-border/50">
-                <div className="w-full">
-                    <h4 className="text-md font-headline mb-2 text-foreground">Pengingat Harian</h4>
-                    <p className="text-xs text-muted-foreground mb-3">Dapatkan notifikasi afirmasi setiap hari pada waktu yang Anda tentukan.</p>
-                    <div className="flex items-center gap-4">
-                        <Input
-                            type="time"
-                            value={notificationTime}
-                            onChange={handleTimeChange}
-                            className="bg-background/50 w-32"
-                            disabled={permission === 'denied'}
-                        />
-                        <Button
-                            onClick={handleToggleNotifications}
-                            variant={notificationsEnabled ? "outline" : "default"}
-                            className="flex-1"
-                            disabled={permission === 'denied'}
-                        >
-                            {notificationsEnabled ? <BellOff className="mr-2" /> : <Bell className="mr-2" />}
-                            {notificationsEnabled ? 'Nonaktifkan' : 'Aktifkan'}
-                        </Button>
+        <div className="p-4 h-full">
+            <Card className="bg-secondary border-secondary/50 shadow-md w-full h-full flex flex-col">
+                <CardHeader className="pb-4">
+                    <div className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg font-headline text-foreground">Afirmasi Harian</CardTitle>
+                        <Quote className="h-5 w-5 text-primary" />
                     </div>
-                     {permission === 'denied' && (
-                        <p className="text-xs text-destructive mt-2">
-                            Anda telah memblokir notifikasi. Izinkan di pengaturan browser Anda untuk menggunakan fitur ini.
-                        </p>
-                    )}
-                </div>
-            </CardFooter>
-        </Card>
+                    <CardDescription className="text-base pt-2 text-muted-foreground font-sans italic">
+                        {affirmation || "Memuat dosis positivitas harianmu..."}
+                    </CardDescription>
+                </CardHeader>
+                <CardFooter className="flex flex-col gap-4 pt-4 border-t border-border/50 mt-auto">
+                    <div className="w-full">
+                        <h4 className="text-md font-headline mb-2 text-foreground">Pengingat Harian</h4>
+                        <p className="text-xs text-muted-foreground mb-3">Dapatkan notifikasi afirmasi setiap hari pada waktu yang Anda tentukan.</p>
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <Input
+                                type="time"
+                                value={notificationTime}
+                                onChange={handleTimeChange}
+                                className="bg-background/50 w-full sm:w-32"
+                                disabled={permission === 'denied'}
+                            />
+                            <Button
+                                onClick={handleToggleNotifications}
+                                variant={notificationsEnabled ? "outline" : "default"}
+                                className="w-full sm:flex-1"
+                                disabled={permission === 'denied'}
+                            >
+                                {notificationsEnabled ? <BellOff className="mr-2 h-4 w-4" /> : <Bell className="mr-2 h-4 w-4" />}
+                                {notificationsEnabled ? 'Nonaktifkan' : 'Aktifkan'}
+                            </Button>
+                        </div>
+                         {permission === 'denied' && (
+                            <p className="text-xs text-destructive mt-2">
+                                Anda telah memblokir notifikasi. Izinkan di pengaturan browser Anda untuk menggunakan fitur ini.
+                            </p>
+                        )}
+                    </div>
+                </CardFooter>
+            </Card>
+        </div>
     );
 }

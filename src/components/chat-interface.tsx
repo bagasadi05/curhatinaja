@@ -19,12 +19,12 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChibiIcon } from "@/components/icons";
-import { Bot, Pause, Send, User, Volume2 } from "lucide-react";
+import { Bot, Pause, Send, User, Volume2, Sparkles, Voicemail } from "lucide-react";
 
 const chatFormSchema = z.object({
   textInput: z.string().min(1, "Pesan tidak boleh kosong."),
@@ -45,6 +45,7 @@ export type ChatInterfaceHandles = {
 type WindowWithHandleEmotionLogged = Window & { handleEmotionLogged?: (feelingLabel: string) => Promise<void> };
 
 export function ChatInterface() {
+  const [responseStyle, setResponseStyle] = useState("Supportive");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -108,6 +109,7 @@ export function ChatInterface() {
   };
 
   async function onSubmit(values: z.infer<typeof chatFormSchema>) {
+    
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -190,7 +192,10 @@ export function ChatInterface() {
 
         setMessages((prev) => prev.filter((m) => m.role !== "loading").concat(assistantMessage));
 
-        generateAudio(proactiveIntro + " " + result.response)
+        generateAudio({
+          text: proactiveIntro + " " + result.response,
+          voiceName: voiceGender === 'female' ? 'Kore' : 'Achernar',
+        })
             .then(audioResult => {
                 setMessages(prev => {
                     return prev.map(m => m.id === assistantMessage.id ? { ...m, audioUrl: audioResult.media } : m)
@@ -214,8 +219,32 @@ export function ChatInterface() {
   (window as WindowWithHandleEmotionLogged).handleEmotionLogged = handleEmotionLogged;
 
   return (
-    <div className="flex flex-col h-full bg-transparent">
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-3 border-b bg-background/80 backdrop-blur-sm">
+        <h2 className="font-headline text-lg text-foreground">Curhat AI</h2>
+        <div className="flex items-center gap-1">
+          <Select value={responseStyle} onValueChange={setResponseStyle}>
+            <SelectTrigger className="w-auto h-9 bg-transparent border-0 text-foreground focus:ring-0">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Supportive">Suportif</SelectItem>
+              <SelectItem value="Neutral Objective">Netral</SelectItem>
+              <SelectItem value="Psychological">Psikologis</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={voiceGender} onValueChange={(value) => setVoiceGender(value as 'female' | 'male')}>
+            <SelectTrigger className="w-auto h-9 bg-transparent border-0 text-foreground focus:ring-0">
+              <Voicemail className="w-5 h-5 text-primary" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="female">Cewe (Natural)</SelectItem>
+              <SelectItem value="male">Cowo (Tenang)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-hidden">
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="px-4 space-y-8 py-10">
             {messages.length === 0 && (
@@ -284,21 +313,18 @@ export function ChatInterface() {
           </div>
         </ScrollArea>
       </div>
-      <div className="p-4 border-t bg-background/80 backdrop-blur-sm">
+      <div className="p-3 border-t bg-background/80 backdrop-blur-sm">
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex items-end gap-3"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
             <FormField
               control={form.control}
               name="textInput"
               render={({ field }) => (
-                <FormItem className="flex-1">
+                <FormItem>
                   <FormControl>
                     <Textarea
                       placeholder="Ketik pesanmu di sini..."
-                      className="min-h-[44px] resize-none focus-visible:ring-2 p-3 bg-secondary rounded-xl shadow-inner"
+                      className="min-h-[48px] resize-none focus-visible:ring-1 p-3 pr-14 bg-secondary rounded-2xl shadow-inner"
                       {...field}
                       onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                         if (e.key === "Enter" && !e.shiftKey) {
@@ -311,50 +337,14 @@ export function ChatInterface() {
                 </FormItem>
               )}
             />
-            <div className="flex flex-col gap-2">
-               <Button
-                type="submit"
-                size="icon"
-                className="h-11 w-11 bg-primary hover:bg-primary/90 rounded-full"
-                disabled={form.formState.isSubmitting}
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
-             <FormField
-                control={form.control}
-                name="responseStyle"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-auto sm:w-[150px] bg-secondary shadow-sm rounded-full h-11">
-                          <SelectValue placeholder="Gaya" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Supportive">Suportif</SelectItem>
-                        <SelectItem value="Neutral Objective">Netral</SelectItem>
-                        <SelectItem value="Psychological">Psikologis</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-muted-foreground mb-1">Suara AI</label>
-              <select
-                className="rounded-lg border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                value={voiceGender}
-                onChange={e => setVoiceGender(e.target.value as 'female' | 'male')}
-              >
-                <option value="female">Cewe (natural)</option>
-                <option value="male">Cowo (natural)</option>
-              </select>
-            </div>
+            <Button
+              type="submit"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 bg-primary hover:bg-primary/90 rounded-full"
+              disabled={form.formState.isSubmitting || !form.getValues("textInput")}
+            >
+              <Send className="h-5 w-5" />
+            </Button>
           </form>
         </Form>
       </div>

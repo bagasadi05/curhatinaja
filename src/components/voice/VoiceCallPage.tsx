@@ -4,20 +4,47 @@ import { VoiceSphere } from './VoiceSphere';
 import { TranscriptPanel } from './TranscriptPanel';
 import { ControlsBar } from './ControlsBar';
 
-const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+// Speech‑to‑text cross‑browser helper
+const SpeechRecognition =
+  typeof window !== 'undefined'
+    ? (window.SpeechRecognition || (window as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition)
+    : undefined;
+
+// Manual type for SpeechRecognition
+interface ISpeechRecognition {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onstart: ((this: ISpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: ISpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: ISpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: ISpeechRecognition, ev: Event) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+// Manual type for SpeechRecognitionEvent
+interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: {
+    length: number;
+    [index: number]: { 0: { transcript: string } };
+  };
+}
 
 export default function VoiceCallPage() {
   const [isDark, setIsDark] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
   const handleMicDown = () => {
-    if (!isMuted && SpeechRecognition) {
+    if (!isMuted && SpeechRecognition && typeof SpeechRecognition === 'function') {
       setIsListening(true);
       setTranscript('');
-      const recognition = new SpeechRecognition();
+      const recognition = new (SpeechRecognition as unknown as { new (): ISpeechRecognition })();
       recognition.lang = 'id-ID';
       recognition.continuous = false;
       recognition.interimResults = true;
