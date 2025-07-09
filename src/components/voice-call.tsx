@@ -287,7 +287,7 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
     recognitionRef.current = recognition;
 
     return cleanup;
-  }, [cleanup, voiceGender, conversationHistory]);
+  }, [cleanup, voiceGender, conversationHistory, lastRequestTime]);
 
   const requestMicrophonePermission = async () => {
     try {

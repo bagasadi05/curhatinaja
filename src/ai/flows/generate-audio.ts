@@ -82,7 +82,7 @@ const generateAudioFlow = ai.defineFlow(
 
     // Retry logic untuk menangani quota exceeded
     const maxRetries = 3;
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -125,14 +125,18 @@ const generateAudioFlow = ai.defineFlow(
           media: `data:audio/wav;base64,${wavBase64}`,
         };
         
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error;
         
         // Cek apakah error terkait quota atau rate limit
-        if (error.message?.includes('429') || 
-            error.message?.includes('quota') || 
-            error.message?.includes('rate limit')) {
-          
+        if (
+          typeof error === 'object' && error !== null && 'message' in error &&
+          typeof (error as { message?: string }).message === 'string' && (
+            (error as { message: string }).message.includes('429') ||
+            (error as { message: string }).message.includes('quota') ||
+            (error as { message: string }).message.includes('rate limit')
+          )
+        ) {
           if (attempt < maxRetries) {
             // Exponential backoff: 2^attempt * 1000ms
             const delay = Math.pow(2, attempt) * 1000;
