@@ -172,26 +172,19 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
       setLastRequestTime(now);
 
       try {
-        const newHistory = [...conversationHistory, { role: 'user' as const, content: userTranscript }];
+        // Ambil hanya 2 interaksi terakhir (user dan assistant) untuk context
+        const lastHistory = conversationHistory.slice(-2);
+        const newHistory = [...lastHistory, { role: 'user' as const, content: userTranscript }];
 
         // 1. Mengirim prompt yang sudah diperbarui untuk meminta penanda ekspresi
         const response = await generateVoiceResponse({
           conversationHistory: newHistory,
           prompt: `
-            Kamu adalah "Teman Curhat AI", seorang pendengar yang hangat, sabar, dan sangat empatik.
-            Responsmu HARUS terasa seperti mengobrol dengan sahabat, bukan robot.
-
-            ATURAN GAYA BICARA (WAJIB DIIKUTI):
-            - Gunakan bahasa Indonesia yang santai dan sehari-hari.
-            - Gunakan kalimat-kalimat pendek agar mudah dipahami.
-            - Gunakan kata-kata pengisi seperti "hmm...", "oke...", "duh,", "ohh gitu ya...".
-            - Untuk jeda natural, gunakan penanda (jeda). Contoh: "Aku paham... (jeda) itu pasti berat."
-            - Untuk menekankan sebuah kata penting, apit kata itu dengan (tekanan). Contoh: "Menurutku itu (tekanan)penting(tekanan) sekali."
-            - Untuk mengubah kecepatan bicara, gunakan penanda di awal kalimat. Contoh:
-              - (cepat)Wah aku jadi ikut semangat dengernya!
-              - (lambat)Coba... kita pikirkan pelan-pelan.
-
-            Berikut adalah percakapan sejauh ini. Berikan respons yang hangat, empatik, dan natural untuk ucapan terakhir dari pengguna, sambil mengikuti SEMUA aturan gaya bicara di atas.
+            Kamu adalah Teman Curhat AI, sahabat yang mendengarkan dengan empati.
+            Jawab singkat, gunakan bahasa Indonesia santai, dan validasi perasaan lawan bicara.
+            Jangan terlalu panjang, cukup 1-2 kalimat saja.
+            Jangan mengulang respons sebelumnya. Jawab hanya untuk ucapan terakhir user.
+            Berikut percakapan singkat terakhir. Berikan respons yang hangat dan natural untuk ucapan terakhir dari pengguna.
           `,
         });
 
