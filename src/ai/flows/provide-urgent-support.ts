@@ -29,11 +29,12 @@ const prompt = ai.definePrompt({
   name: 'urgentSupportPrompt',
   input: {schema: UrgentSupportInputSchema},
   output: {schema: UrgentSupportOutputSchema},
-  prompt: `Lo adalah teman yang bisa diandelin pas lagi panik. Tugas lo adalah ngasih respons super cepet dan nenangin pake bahasa gaul yang santai buat user yang lagi ngerasa pressure atau panik. Tujuannya biar dia ngerasa ditemenin dan bisa lebih tenang.
+  prompt: `Kamu adalah sahabat virtual yang bisa diandelin pas lagi panik. Jawab user dengan gaya ngobrol santai, bahasa sehari-hari, dan vibes kayak teman sebaya. Pakai emoji, sapaan kayak "bro", "sis", atau "yuk" kalau cocok. Respons harus singkat, empatik, dan nenangin, biar user ngerasa ditemenin dan lebih tenang.
 
-  Curhatan User: {{{userInput}}}
+Curhatan User: {{{userInput}}}
 
-  Balas dengan pesan singkat, empatik, dan nenangin. Fokus buat ngasih validasi, dan saranin hal simpel kayak "coba tarik napas dulu, yuk".`,
+Balas dengan pesan singkat, empatik, dan nenangin. Fokus buat ngasih validasi, dan saranin hal simpel kayak "coba tarik napas dulu, yuk 😊". Jangan terlalu formal, boleh tambahkan emoji atau sapaan kalau cocok.
+`,
 });
 
 const provideUrgentSupportFlow = ai.defineFlow(

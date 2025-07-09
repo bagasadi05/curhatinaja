@@ -12,7 +12,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateVoiceResponseInputSchema = z.object({
-  textInput: z.string().describe('Input teks pengguna dari ucapan.'),
+  textInput: z.string().optional().describe('Input teks pengguna dari ucapan.'),
+  conversationHistory: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string()
+  })).optional().describe('Riwayat percakapan untuk konteks.'),
+  prompt: z.string().optional().describe('Prompt kustom untuk menginstruksikan AI.'),
 });
 export type GenerateVoiceResponseInput = z.infer<typeof GenerateVoiceResponseInputSchema>;
 

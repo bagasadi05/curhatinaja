@@ -138,6 +138,7 @@ export function ChatInterface() {
       generateAudio({
         text: result.responseText,
         voiceName: voiceGender === 'female' ? 'Kore' : 'Algenib',
+        inputType: 'text',
       })
         .then(audioResult => {
             setMessages(prev => prev.map(m =>
@@ -195,6 +196,7 @@ export function ChatInterface() {
         generateAudio({
           text: proactiveIntro + " " + result.response,
           voiceName: voiceGender === 'female' ? 'Kore' : 'Achernar',
+          inputType: 'text',
         })
             .then(audioResult => {
                 setMessages(prev => {
@@ -219,7 +221,7 @@ export function ChatInterface() {
   (window as WindowWithHandleEmotionLogged).handleEmotionLogged = handleEmotionLogged;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-4"> {/* Tambah padding bawah untuk menu bar */}
       <div className="flex items-center justify-between p-3 border-b bg-background/80 backdrop-blur-sm">
         <h2 className="font-headline text-lg text-foreground">Curhat AI</h2>
         <div className="flex items-center gap-1">
@@ -245,7 +247,7 @@ export function ChatInterface() {
         </div>
       </div>
       <div className="flex-1 overflow-y-hidden">
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 pb-24" ref={scrollAreaRef}> {/* Tambah padding bawah agar input tidak tertutup */}
           <div className="px-4 space-y-8 py-10">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-20 animate-fade-in">

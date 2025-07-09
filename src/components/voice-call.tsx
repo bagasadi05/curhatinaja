@@ -98,6 +98,13 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
   const [lastError, setLastError] = React.useState<string | null>(null);
   const [permission, setPermission] = React.useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [voiceGender, setVoiceGender] = React.useState<'female' | 'male'>('female');
+  
+  // Tambahkan state untuk riwayat percakapan
+  const [conversationHistory, setConversationHistory] = React.useState<{ role: 'user' | 'assistant'; content: string; }[]>([]);
+  
+  // Rate limiting state
+  const [lastRequestTime, setLastRequestTime] = React.useState<number>(0);
+  const minRequestInterval = 2000; // 2 detik minimum interval
 
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -155,13 +162,64 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
       const userTranscript = event.results[0][0].transcript;
       setActivity("processing");
 
+      // Rate limiting check
+      const now = Date.now();
+      if (now - lastRequestTime < minRequestInterval) {
+        setLastError("Tunggu sebentar sebelum mengirim pesan lagi.");
+        setActivity("idle");
+        return;
+      }
+      setLastRequestTime(now);
+
       try {
+        const newHistory = [...conversationHistory, { role: 'user' as const, content: userTranscript }];
+
+        // 1. Mengirim prompt yang sudah diperbarui untuk meminta penanda ekspresi
         const response = await generateVoiceResponse({
-          textInput: userTranscript,
+          conversationHistory: newHistory,
+          prompt: `
+            Kamu adalah "Teman Curhat AI", seorang pendengar yang hangat, sabar, dan sangat empatik.
+            Responsmu HARUS terasa seperti mengobrol dengan sahabat, bukan robot.
+
+            ATURAN GAYA BICARA (WAJIB DIIKUTI):
+            - Gunakan bahasa Indonesia yang santai dan sehari-hari.
+            - Gunakan kalimat-kalimat pendek agar mudah dipahami.
+            - Gunakan kata-kata pengisi seperti "hmm...", "oke...", "duh,", "ohh gitu ya...".
+            - Untuk jeda natural, gunakan penanda (jeda). Contoh: "Aku paham... (jeda) itu pasti berat."
+            - Untuk menekankan sebuah kata penting, apit kata itu dengan (tekanan). Contoh: "Menurutku itu (tekanan)penting(tekanan) sekali."
+            - Untuk mengubah kecepatan bicara, gunakan penanda di awal kalimat. Contoh:
+              - (cepat)Wah aku jadi ikut semangat dengernya!
+              - (lambat)Coba... kita pikirkan pelan-pelan.
+
+            Berikut adalah percakapan sejauh ini. Berikan respons yang hangat, empatik, dan natural untuk ucapan terakhir dari pengguna, sambil mengikuti SEMUA aturan gaya bicara di atas.
+          `,
         });
+
+        setConversationHistory([
+            ...newHistory, 
+            { role: 'assistant' as const, content: response.responseText }
+        ]);
+
+        // 2. Logika konversi teks ke SSML yang lebih canggih
+        let textToConvert = response.responseText;
+
+        // Rantai .replace() untuk mengubah semua penanda menjadi SSML yang valid.
+        // Urutan penting! Lakukan yang lebih spesifik terlebih dahulu.
+        textToConvert = textToConvert
+          .replace(/\(cepat\)(.*?)(?=[.?!]|$)/g, '<prosody rate="fast">$1</prosody>')
+          .replace(/\(lambat\)(.*?)(?=[.?!]|$)/g, '<prosody rate="slow">$1</prosody>')
+          .replace(/\(tekanan\)(.*?)\(tekanan\)/g, '<emphasis level="moderate">$1</emphasis>')
+          .replace(/\((jeda singkat|jeda)\)/g, '<break time="600ms"/>');
+
+        const finalSSML = `<speak>${textToConvert}</speak>`;
+        
+        // Log ini sangat membantu untuk debugging, jadi biarkan saja
+        console.log("Generated SSML:", finalSSML);
+
         const voiceName = voiceGender === 'male' ? 'Algenib' : 'Kore';
         const audioResult = await generateAudio({
-          text: response.responseText,
+          ssml: finalSSML,
+          inputType: 'ssml',
           voiceName,
         });
         
@@ -194,7 +252,16 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
 
       } catch (error) {
         console.error("Voice call error:", error);
-        setLastError("Maaf, terjadi kesalahan saat memproses permintaanmu.");
+        
+        // Handle specific quota exceeded error
+        if (error instanceof Error && 
+            (error.message.includes('quota') || 
+             error.message.includes('429') || 
+             error.message.includes('rate limit'))) {
+          setLastError("Layanan suara sedang sibuk. Silakan coba lagi dalam beberapa menit.");
+        } else {
+          setLastError("Maaf, terjadi kesalahan saat memproses permintaanmu.");
+        }
         setActivity("idle");
       }
     };
@@ -220,7 +287,7 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
     recognitionRef.current = recognition;
 
     return cleanup;
-  }, [cleanup, voiceGender]);
+  }, [cleanup, voiceGender, conversationHistory]);
 
   const requestMicrophonePermission = async () => {
     try {
@@ -303,7 +370,7 @@ export function VoiceCall({ onClose }: { onClose: () => void }) {
         {status}
       </p>
       <div className="mt-auto w-full max-w-xs px-4 pb-4">
-        <Button variant="secondary" onClick={onClose} className="w-full">Tutup</Button>
+        <Button variant="secondary" onClick={() => { setConversationHistory([]); onClose(); }} className="w-full">Tutup</Button>
       </div>
     </div>
   );
